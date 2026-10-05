@@ -37,8 +37,9 @@ public class CanvasView extends View {
 				/*if( MyDebug.LOG )
 					Log.d(TAG, "invalidate()");*/
                 preview.test_ticker_called = true;
-                invalidate();
-                handler.postDelayed(this, preview.getFrameRate());
+                // shashinki: no ticker. It invalidated this overlay every 16 ms on API 24-32 so
+                // the overlay could animate; nothing is drawn on it here, so it is redrawn only
+                // when the preview asks.
             }
         };
     }

@@ -12,6 +12,20 @@
         android:layout_centerInParent="true"
         />
     
+    <!-- shashinki: upstream's on-screen controls, kept so its code finds every view it looks
+         up and lays out, but inside a container that is never shown. Nothing in here draws or
+         takes a touch, whatever visibility upstream gives the views themselves; the interface
+         the reader sees is the Compose layer the activity adds over the preview. A
+         RelativeLayout, because upstream casts these views' layout params to its kind.
+         Invisible, not gone: Android still lays invisible views out, and upstream reads their
+         sizes — it scales a video's thumbnail to the gallery button's width, and a button that
+         was never laid out is 0 wide. -->
+    <RelativeLayout
+        android:id="@+id/upstream_controls"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible">
+
     <ImageButton
         android:id="@+id/take_photo"
         android:layout_width="100dp"
@@ -654,5 +668,6 @@
         android:visibility="gone"
         android:importantForAccessibility="no"
         />
-    
+    </RelativeLayout>
+
 </RelativeLayout>

@@ -47,8 +47,7 @@ public class MySurfaceView extends SurfaceView implements CameraSurface {
 				/*if( MyDebug.LOG )
 					Log.d(TAG, "invalidate()");*/
                 preview.test_ticker_called = true;
-                invalidate();
-                handler.postDelayed(this, preview.getFrameRate());
+                // shashinki: no ticker, as in CanvasView.
             }
         };
     }

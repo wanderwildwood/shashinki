@@ -3212,10 +3212,9 @@ public class MyApplicationInterface extends BasicApplicationInterface {
 
     @Override
     public void onDrawPreview(Canvas canvas) {
-        if( !main_activity.isCameraInBackground() ) {
-            // no point drawing when in background (e.g., settings open)
-            drawPreview.onDrawPreview(canvas);
-        }
+        // shashinki: nothing is drawn over the viewfinder. Upstream's overlay redraws every frame
+        // (clock, battery, focus ring, level line), which on an e-ink panel is a repaint of the
+        // whole screen for numbers nobody asked for. The interface is the Compose layer instead.
     }
 
     public enum Alignment {

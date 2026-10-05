@@ -254,6 +254,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         }
         //EdgeToEdge.enable(this, SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT), SystemBarStyle.dark(Color.TRANSPARENT)); // test edge-to-edge on pre-Android 15
         super.onCreate(savedInstanceState);
+        com.wanderwildwood.shashinki.ui.CameraLayer.prepare(this); // shashinki: defaults before upstream reads them
 
         setContentView(R.layout.activity_main);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false); // initialise any unset preferences to their default values
@@ -667,6 +668,8 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         // so we get the icons rotation even when rotating for the first time - see onSystemOrientationChanged
         this.hasOldSystemOrientation = true;
         this.oldSystemOrientation = getSystemOrientation();
+
+        com.wanderwildwood.shashinki.ui.CameraLayer.attach(this); // shashinki: the interface
 
         if( MyDebug.LOG )
             Log.d(TAG, "onCreate: total time for Activity startup: " + (System.currentTimeMillis() - debug_time));
@@ -4998,6 +5001,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
     }
 
     void cameraSetup() {
+        com.wanderwildwood.shashinki.ui.CameraLayer.refreshSoon(); // shashinki
         long debug_time = 0;
         if( MyDebug.LOG ) {
             Log.d(TAG, "cameraSetup");

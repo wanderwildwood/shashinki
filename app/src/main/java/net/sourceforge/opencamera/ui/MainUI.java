@@ -1062,6 +1062,7 @@ public class MainUI {
      *  Also handles content descriptions for the take photo button and switch video button.
      */
     public void setTakePhotoIcon() {
+        com.wanderwildwood.shashinki.ui.CameraLayer.refreshSoon(); // shashinki
         if( MyDebug.LOG )
             Log.d(TAG, "setTakePhotoIcon()");
         if( main_activity.getPreview() != null ) {
