@@ -99,6 +99,22 @@ object CameraLayer {
         Handler(Looper.getMainLooper()).post { newest = bitmap }
     }
 
+    /**
+     * True for a moment as a photo is taken: the viewfinder goes white, like a shutter, and comes
+     * back. On this panel that is one quick repaint — the plainest way to say "got it" — where
+     * Open Camera's own flash of the frame is drawn on the overlay this app leaves empty.
+     */
+    internal var blinking by mutableStateOf(false)
+
+    @JvmStatic
+    fun blink() {
+        val main = Handler(Looper.getMainLooper())
+        main.post { blinking = true }
+        main.postDelayed({ blinking = false }, BLINK_MS)
+    }
+
+    private const val BLINK_MS = 180L
+
     /** Called by Open Camera's error hooks: the camera stopped, or a photo failed. */
     @JvmStatic
     fun trouble(message: Int) {
@@ -254,6 +270,9 @@ private fun Camera(activity: MainActivity) {
         // picture still reaches Open Camera's preview, which focuses where it was tapped.
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (Defaults.grid(activity)) Grid()
+            if (CameraLayer.blinking) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
+            }
             found?.let { f ->
                 Box(Modifier.align(Alignment.BottomCenter)) {
                     QrCard(f) {

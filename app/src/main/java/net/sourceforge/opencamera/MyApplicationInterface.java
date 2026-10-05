@@ -2862,6 +2862,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
             Log.d(TAG, "onCaptureStarted");
         n_capture_images = 0;
         n_capture_images_raw = 0;
+        com.wanderwildwood.shashinki.ui.CameraLayer.blink(); // shashinki: the overlay that would flash draws nothing here
         drawPreview.onCaptureStarted();
 
         if( getPhotoMode() == PhotoMode.X_Night ) {
