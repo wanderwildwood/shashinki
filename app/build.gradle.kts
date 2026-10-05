@@ -112,6 +112,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.exifinterface)
     implementation(libs.legacy.support)
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
 }

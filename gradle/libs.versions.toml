@@ -16,6 +16,7 @@ work = "2.11.2"
 appcompat = "1.7.1"
 exifinterface = "1.4.2"
 legacy-support = "1.0.0"
+zxing = "3.5.3"
 json = "20240303"
 
 [libraries]
@@ -36,6 +37,8 @@ mmd = { module = "com.mudita:MMD", version.ref = "mmd" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
 legacy-support = { module = "androidx.legacy:legacy-support-v4", version.ref = "legacy-support" }
+# Reading QR codes in the viewfinder. Apache-2.0.
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 # Android's org.json is a stub in local unit tests; this is the real one, for tests only.

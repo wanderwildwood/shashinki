@@ -36,6 +36,30 @@
     <string name="shashinki_location">Where a photo was taken</string>
     <string name="shashinki_location_note">Written into each photo. Anyone you send it to can read it.</string>
     <string name="shashinki_grid">Grid</string>
+    <string name="shashinki_qr">Read QR codes</string>
+    <string name="shashinki_qr_note">A code in the viewfinder is read and offered to the app it belongs to. Nothing opens until you press.</string>
+
+    <!-- QR card: the kind of thing a code holds -->
+    <string name="qr_kind_web">Web address</string>
+    <string name="qr_kind_link">Link</string>
+    <string name="qr_kind_sign_in">Sign-in code for an authenticator</string>
+    <string name="qr_kind_wifi">Wi-Fi network</string>
+    <string name="qr_kind_contact">Contact</string>
+    <string name="qr_kind_email">Email</string>
+    <string name="qr_kind_text">Text message</string>
+    <string name="qr_kind_phone">Phone number</string>
+    <string name="qr_kind_place">Place</string>
+    <string name="qr_kind_text_plain">Text</string>
+    <!-- QR card buttons (verbs) -->
+    <string name="qr_open">Open</string>
+    <string name="qr_join">Join</string>
+    <string name="qr_add">Add to contacts</string>
+    <string name="qr_write">Write</string>
+    <string name="qr_call">Dial</string>
+    <string name="qr_show">Show on a map</string>
+    <string name="qr_copy">Copy</string>
+    <string name="qr_copied">Copied</string>
+    <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_folder">Folder</string>
     <string name="shashinki_folder_note">Under DCIM on the phone. A name only.</string>
     <string name="shashinki_unknown">Not known until the camera opens</string>
@@ -51,6 +75,7 @@
     <string name="shashinki_about_after">Open Camera by Mark Harman, GPL 3.0 or later, is the camera itself: everything here but its face.</string>
     <string name="shashinki_about_licence">GNU General Public License v3 or later</string>
     <string name="shashinki_about_icons">Icons from Material Symbols, Apache 2.0</string>
+    <string name="shashinki_about_zxing">QR codes read by ZXing, Apache 2.0</string>
     <string name="shashinki_about_feed_the_llamas">feed the llamas</string>
     <string name="shashinki_about_no_browser">There is no browser on this phone to open that with.</string>
     <string name="shashinki_about_close">Close</string>

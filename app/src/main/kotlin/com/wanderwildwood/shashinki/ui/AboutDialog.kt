@@ -57,6 +57,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
         Spacer(Modifier.height(14.dp))
         TextMMD(text = stringResource(R.string.shashinki_about_licence), style = MaterialTheme.typography.labelSmall)
         TextMMD(text = stringResource(R.string.shashinki_about_icons), style = MaterialTheme.typography.labelSmall)
+        TextMMD(text = stringResource(R.string.shashinki_about_zxing), style = MaterialTheme.typography.labelSmall)
 
         Spacer(Modifier.height(14.dp))
         Llama()

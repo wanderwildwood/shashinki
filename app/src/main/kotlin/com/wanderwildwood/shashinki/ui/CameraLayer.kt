@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -182,11 +183,28 @@ private fun Camera(activity: MainActivity) {
         return
     }
 
+    // A code the viewfinder has read, waiting on the card; and the last one closed, which is
+    // not offered again while it is still in front of the lens.
+    var found by remember { mutableStateOf<Found?>(null) }
+    var closed by remember { mutableStateOf<Pair<String, Long>?>(null) }
+    QrWatch(activity, enabled = found == null && !shot.video && !shot.failed && Defaults.qr(activity)) { f ->
+        val (raw, at) = closed ?: ("" to 0L)
+        if (f.raw != raw || System.currentTimeMillis() - at > QR_QUIET_MS) found = f
+    }
+
     Column(Modifier.fillMaxSize()) {
         // The viewfinder shows through here. Nothing in this box takes a touch, so a tap on the
         // picture still reaches Open Camera's preview, which focuses where it was tapped.
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (Defaults.grid(activity)) Grid()
+            found?.let { f ->
+                Box(Modifier.align(Alignment.BottomCenter)) {
+                    QrCard(f) {
+                        closed = f.raw to System.currentTimeMillis()
+                        found = null
+                    }
+                }
+            }
             if (shot.failed) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
@@ -352,6 +370,9 @@ private fun Grid() {
         }
     }
 }
+
+/** How long a closed code stays closed while it is still in the frame. */
+private const val QR_QUIET_MS = 8_000L
 
 private val RING = 56.dp
 private val SHUTTER = 72.dp

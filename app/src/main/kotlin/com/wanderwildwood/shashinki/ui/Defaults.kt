@@ -18,6 +18,7 @@ object Defaults {
     private const val APPLIED = "shashinki_defaults_v1"
     private const val CAMERA2 = "shashinki_camera2"
     const val GRID = "shashinki_grid"
+    const val QR = "shashinki_qr"
 
     fun prefs(context: Context): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
@@ -49,4 +50,7 @@ object Defaults {
     }
 
     fun grid(context: Context): Boolean = prefs(context).getBoolean(GRID, false)
+
+    /** Reading QR codes in the viewfinder: on unless turned off, so a code just works. */
+    fun qr(context: Context): Boolean = prefs(context).getBoolean(QR, true)
 }

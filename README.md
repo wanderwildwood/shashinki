@@ -23,7 +23,12 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   installed, inside its folder.
 - **Flash** cycles through automatic, off and on in place, as Mudita's own camera does.
 - **Tap the viewfinder** to focus there; pinch to zoom.
-- **Eight settings**: picture size, video size, picture quality, a self-timer, the shutter
+- **QR codes are read as you point at them.** A card says what the code is — a web address,
+  a Wi-Fi network, a contact, an email, a phone number, a place, a sign-in code — and offers
+  the one thing to do with it, handed to the app on the phone that does that: the browser,
+  Android's own "save this network", Contacts, Email, Messaging, a map. Nothing opens until the
+  button is pressed. Copy is always there. It can be turned off.
+- **Nine settings**: reading QR codes, picture size, video size, picture quality, a self-timer, the shutter
   sound, writing where a photo was taken into it, a grid, and the folder under DCIM.
 
 Photos and videos go to `DCIM/OpenCamera` unless the folder is changed, so they appear in
@@ -70,7 +75,7 @@ Its third-party material is listed in its own credits: AndroidX (Apache 2.0), Go
 Material Design icons (Apache 2.0), and its sounds (CC0).
 
 Icons in the new layer are [Material Symbols](https://fonts.google.com/icons), Apache
-License 2.0.
+License 2.0. QR codes are read by [ZXing](https://github.com/zxing/zxing), Apache License 2.0.
 
 ## Licence
 

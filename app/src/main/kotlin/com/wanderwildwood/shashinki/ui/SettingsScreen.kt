@@ -44,7 +44,7 @@ import net.sourceforge.opencamera.PreferenceKeys
 import net.sourceforge.opencamera.R
 
 /**
- * Eight of Open Camera's 177 settings: the ones that change what a photo or a video is, or what
+ * Eight of Open Camera's 177 settings, and reading QR codes: the ones that change what a photo or a video is, or what
  * taking one is like. The rest keep Open Camera's own defaults, which are good ones.
  *
  * Each row writes the same preference Open Camera's own settings screen wrote, under the same
@@ -148,6 +148,16 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                             LOCATION_REQUEST,
                         )
                     }
+                    changed()
+                }
+            }
+            item {
+                Toggle(
+                    title = stringResource(R.string.shashinki_qr),
+                    note = stringResource(R.string.shashinki_qr_note),
+                    on = prefs.getBoolean(Defaults.QR, true),
+                ) {
+                    prefs.edit().putBoolean(Defaults.QR, it).apply()
                     changed()
                 }
             }
