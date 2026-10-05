@@ -4112,6 +4112,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         ImageButton galleryButton = this.findViewById(R.id.gallery);
         galleryButton.setImageBitmap(thumbnail);
         gallery_bitmap = thumbnail;
+        com.wanderwildwood.shashinki.ui.CameraLayer.thumbnail(thumbnail); // shashinki
     }
 
     /** Updates the gallery icon by searching for the most recent photo.

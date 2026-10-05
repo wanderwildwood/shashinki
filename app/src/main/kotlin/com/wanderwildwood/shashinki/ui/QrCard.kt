@@ -22,7 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -147,11 +150,18 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
 @Composable
 internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) -> Unit) {
     val report by rememberUpdatedState(onFound)
-    LaunchedEffect(enabled) {
-        if (!enabled) return@LaunchedEffect
+    // Only while the camera is in front and running. Another screen over it — Android's own
+    // "save this network?" — pauses the activity and Open Camera lets the camera go and takes it
+    // back; reading frames off the view through that is how the viewfinder came back frozen.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val resumed by lifecycle.currentStateFlow.collectAsState()
+    LaunchedEffect(enabled, resumed.isAtLeast(Lifecycle.State.RESUMED)) {
+        if (!enabled || !resumed.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
         while (isActive) {
             delay(INTERVAL_MS)
-            val view = activity.preview?.view as? TextureView ?: continue
+            val preview = activity.preview ?: continue
+            if (!preview.isPreviewStarted || preview.isOpeningCamera || preview.isTakingPhotoOrOnTimer) continue
+            val view = preview.view as? TextureView ?: continue
             if (!view.isAvailable || view.width == 0) continue
             val frame = view.getBitmap(FRAME_WIDTH, FRAME_WIDTH * view.height / view.width) ?: continue
             val parsed = withContext(Dispatchers.Default) {

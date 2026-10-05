@@ -2,12 +2,14 @@ package com.wanderwildwood.shashinki.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
@@ -82,6 +86,18 @@ object CameraLayer {
      * Camera says these in toasts, which this app turns off; a failure has to be said somewhere.
      */
     internal var trouble by mutableStateOf<Int?>(null)
+
+    /**
+     * The newest photo, as Open Camera hands its own gallery button a thumbnail of it. Shown in
+     * the gallery circle: the one sign, besides the shutter's sound, that a photo was taken, and
+     * a change in one small circle rather than an animation across the screen.
+     */
+    internal var newest by mutableStateOf<Bitmap?>(null)
+
+    @JvmStatic
+    fun thumbnail(bitmap: Bitmap?) {
+        Handler(Looper.getMainLooper()).post { newest = bitmap }
+    }
 
     /** Called by Open Camera's error hooks: the camera stopped, or a photo failed. */
     @JvmStatic
@@ -313,7 +329,12 @@ private fun Camera(activity: MainActivity) {
                 .height(CameraLayer.BAR)
                 .background(MaterialTheme.colorScheme.surface),
         ) {
-            Ring(Icons.Picture, stringResource(R.string.shashinki_cd_gallery), enabled = !shot.recording) {
+            Ring(
+                Icons.Picture,
+                stringResource(R.string.shashinki_cd_gallery),
+                enabled = !shot.recording,
+                picture = CameraLayer.newest,
+            ) {
                 activity.clickedGallery(null)
             }
             Shutter(recording = shot.recording) {
@@ -367,7 +388,7 @@ private fun BarIcon(icon: ImageVector, description: String, onClick: () -> Unit)
 
 /** An outlined circle with a glyph in it, as Mudita draws the gallery and flash buttons. */
 @Composable
-private fun Ring(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
+private fun Ring(icon: ImageVector, description: String, enabled: Boolean, picture: Bitmap? = null, onClick: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -376,7 +397,16 @@ private fun Ring(icon: ImageVector, description: String, enabled: Boolean, onCli
             .border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
     ) {
-        Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
+        if (picture != null) {
+            Image(
+                bitmap = remember(picture) { picture.asImageBitmap() },
+                contentDescription = description,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize().clip(CircleShape),
+            )
+        } else {
+            Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
+        }
     }
 }
 
