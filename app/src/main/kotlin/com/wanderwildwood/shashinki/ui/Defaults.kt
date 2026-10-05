@@ -16,12 +16,23 @@ import net.sourceforge.opencamera.PreferenceKeys
 object Defaults {
 
     private const val APPLIED = "shashinki_defaults_v1"
+    private const val CAMERA2 = "shashinki_camera2"
     const val GRID = "shashinki_grid"
 
     fun prefs(context: Context): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     fun apply(context: Context) {
         val prefs = prefs(context)
+        // The camera API, whatever was set before — so the copy already on a phone gets it too.
+        // Open Camera only starts on Camera2 for phones it recognises (Google, Nokia, Samsung,
+        // OnePlus) and gives everything else Android's old camera API. On the Kompakt the old
+        // API hands back black frames, where Camera2, which its camera supports in full, works.
+        if (!prefs.getBoolean(CAMERA2, false)) {
+            prefs.edit()
+                .putString(PreferenceKeys.CameraAPIPreferenceKey, "preference_camera_api_camera2")
+                .putBoolean(CAMERA2, true)
+                .apply()
+        }
         if (prefs.getBoolean(APPLIED, false)) return
         prefs.edit()
             // Toasts slide in and fade out — a repaint on the way in and another on the way out,
