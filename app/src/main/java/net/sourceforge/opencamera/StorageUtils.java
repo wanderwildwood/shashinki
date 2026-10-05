@@ -126,6 +126,7 @@ public class StorageUtils {
      *  See https://github.com/owncloud/android/issues/1675 for OwnCloud's discussion on this.
      */
     void announceUri(Uri uri, boolean is_new_picture, boolean is_new_video) {
+        com.wanderwildwood.shashinki.ui.CameraLayer.pictureSaved(context, is_new_picture); // shashinki
         if( MyDebug.LOG )
             Log.d(TAG, "announceUri: " + uri);
         if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ) {

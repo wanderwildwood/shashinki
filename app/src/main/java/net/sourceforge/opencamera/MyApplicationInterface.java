@@ -2744,11 +2744,13 @@ public class MyApplicationInterface extends BasicApplicationInterface {
 
     @Override
     public void onCameraError() {
+        com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.shashinki_camera_stopped); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, R.string.camera_error);
     }
 
     @Override
     public void onPhotoError() {
+        com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.shashinki_photo_failed); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, R.string.failed_to_take_picture);
     }
 

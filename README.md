@@ -32,10 +32,15 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   sound, writing where a photo was taken into it, a grid, and the folder under DCIM.
 
 Photos and videos go to `DCIM/OpenCamera` unless the folder is changed, so they appear in
-Gallery, and with Gallery's backup turned on they go to Immich.
+Gallery. With Gallery's backup turned on, Camera tells Gallery the moment it has saved a photo,
+and it goes up to Immich then.
 
 When the camera cannot be opened — on a Kompakt, usually because the switch on the left side
-has turned it off — the screen says so.
+has turned it off — the screen says so, and it says so too if the camera stops or a photo
+fails.
+
+It uses Android's Camera2 interface, which the Kompakt's camera supports in full. Open Camera
+on its own starts the Kompakt on the older interface, where photos come out black.
 
 ## What it does not do
 

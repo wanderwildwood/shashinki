@@ -1,5 +1,7 @@
 package com.wanderwildwood.shashinki.ui
 
+import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewGroup
@@ -75,6 +77,27 @@ object CameraLayer {
     internal var snapshot by mutableStateOf(Snapshot())
         private set
 
+    /**
+     * Something that went wrong, said in the viewfinder until the camera is next ready. Open
+     * Camera says these in toasts, which this app turns off; a failure has to be said somewhere.
+     */
+    internal var trouble by mutableStateOf<Int?>(null)
+
+    /** Called by Open Camera's error hooks: the camera stopped, or a photo failed. */
+    @JvmStatic
+    fun trouble(message: Int) {
+        Handler(Looper.getMainLooper()).post { trouble = message }
+    }
+
+    /** Called when the camera has (re)opened: any earlier trouble is over. */
+    @JvmStatic
+    fun cameraReady() {
+        Handler(Looper.getMainLooper()).post {
+            trouble = null
+            refresh()
+        }
+    }
+
     private var host = WeakReference<MainActivity>(null)
 
     /**
@@ -145,6 +168,24 @@ object CameraLayer {
         )
     }
 
+    /**
+     * Called by Open Camera once a photo is saved. Gallery (garō), when it is on the phone, is
+     * told directly, so its backup starts within its own limits rather than waiting on Android
+     * to notice the new picture — which on the Kompakt it sometimes does not.
+     */
+    @JvmStatic
+    fun pictureSaved(context: Context, isPicture: Boolean) {
+        if (!isPicture) return
+        runCatching {
+            context.sendBroadcast(
+                Intent(GALLERY_NEW_PICTURE).setPackage(GALLERY),
+            )
+        }
+    }
+
+    private const val GALLERY = "com.wanderwildwood.garo"
+    private const val GALLERY_NEW_PICTURE = "com.wanderwildwood.garo.action.NEW_PICTURE"
+
     /** The three flash states Mudita's camera offers; Open Camera's others are skipped over. */
     private val FLASHES = listOf("flash_auto", "flash_off", "flash_on")
 
@@ -205,7 +246,11 @@ private fun Camera(activity: MainActivity) {
                     }
                 }
             }
-            if (shot.failed) {
+            val message = when {
+                shot.failed -> R.string.shashinki_no_camera
+                else -> CameraLayer.trouble
+            }
+            if (message != null) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface),
@@ -213,7 +258,7 @@ private fun Camera(activity: MainActivity) {
                     modifier = Modifier.align(Alignment.Center).padding(24.dp),
                 ) {
                     TextMMD(
-                        text = stringResource(R.string.shashinki_no_camera),
+                        text = stringResource(message),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(20.dp),
                     )
@@ -272,6 +317,7 @@ private fun Camera(activity: MainActivity) {
                 activity.clickedGallery(null)
             }
             Shutter(recording = shot.recording) {
+                CameraLayer.trouble = null
                 activity.clickedTakePhoto(null)
                 CameraLayer.refresh()
             }

@@ -17,6 +17,8 @@
     <string name="shashinki_cd_flash_on">Flash: on</string>
     <string name="shashinki_cd_flash_off">Flash: off</string>
     <!-- When the camera cannot be opened. On a Kompakt the usual cause is the switch on the left side -->
+    <string name="shashinki_camera_stopped">The camera stopped working. Leave the app and open it again to restart it.</string>
+    <string name="shashinki_photo_failed">That photo could not be taken. Try again.</string>
     <string name="shashinki_no_camera">The camera could not be opened. If the switch on the left side of the phone is set to turn the camera off, move it back.</string>
 
     <!-- Settings -->

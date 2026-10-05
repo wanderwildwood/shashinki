@@ -5001,7 +5001,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
     }
 
     void cameraSetup() {
-        com.wanderwildwood.shashinki.ui.CameraLayer.refreshSoon(); // shashinki
+        com.wanderwildwood.shashinki.ui.CameraLayer.cameraReady(); // shashinki
         long debug_time = 0;
         if( MyDebug.LOG ) {
             Log.d(TAG, "cameraSetup");
