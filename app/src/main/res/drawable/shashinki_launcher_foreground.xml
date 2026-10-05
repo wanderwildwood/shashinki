@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 写真機: a camera of the old kind, a box with a lens and the hump of its viewfinder, drawn
+     the way the word sounds. Not a phone's camera module, which is a dot in a rounded square
+     and says nothing about taking a picture.
+
+     Thin register, at the weights of Tuning Fork, Mesh and Gallery: 108 viewport, stroke 3.0,
+     round joins, no fill except the small window, which is a droplet. Every point sits within
+     33 units of the centre. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- the body, with the viewfinder's hump on top -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="3.0"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M30,42 L44,42 L47,35 L61,35 L64,42 L78,42 L78,74 L30,74 Z" />
+
+    <!-- the lens -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="3.0"
+        android:fillColor="#00000000"
+        android:pathData="M42,58 A12,12 0 1 0 66,58 A12,12 0 1 0 42,58 Z" />
+
+    <!-- the little window beside it -->
+    <path android:fillColor="#000000" android:pathData="M68,48 A2.2,2.2 0 1 0 72.4,48 A2.2,2.2 0 1 0 68,48 Z" />
+</vector>

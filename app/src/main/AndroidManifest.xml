@@ -21,7 +21,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/shashinki_launcher"
         android:label="@string/shashinki_app_name"
         android:name=".OpenCameraApplication"
         android:theme="@style/AppTheme"
