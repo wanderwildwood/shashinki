@@ -18,6 +18,7 @@ object Defaults {
     private const val APPLIED = "shashinki_defaults_v1"
     private const val CAMERA2 = "shashinki_camera2"
     private const val CAMERA_FOLDER = "shashinki_camera_folder"
+    private const val FLASH_TORCH = "shashinki_flash_torch"
     const val GRID = "shashinki_grid"
     const val QR = "shashinki_qr"
 
@@ -42,6 +43,15 @@ object Defaults {
             val edit = prefs.edit().putBoolean(CAMERA_FOLDER, true)
             if (prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "OpenCamera") == "OpenCamera") {
                 edit.putString(PreferenceKeys.SaveLocationPreferenceKey, "Camera")
+            }
+            edit.apply()
+        }
+        // Flash "on" became the torch, lit from the moment it is chosen. A copy left on the old
+        // fire-at-the-shot "on" is moved over once, so the button means the same on every phone.
+        if (!prefs.getBoolean(FLASH_TORCH, false)) {
+            val edit = prefs.edit().putBoolean(FLASH_TORCH, true)
+            prefs.all.forEach { (key, value) ->
+                if (key.startsWith("flash_value_") && value == "flash_on") edit.putString(key, "flash_torch")
             }
             edit.apply()
         }

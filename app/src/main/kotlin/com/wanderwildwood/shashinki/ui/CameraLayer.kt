@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -49,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.mudita.mmd.ThemeMMD
 import com.mudita.mmd.components.text.TextMMD
 import net.sourceforge.opencamera.MainActivity
+import net.sourceforge.opencamera.MyApplicationInterface
 import net.sourceforge.opencamera.PreferenceKeys
 import net.sourceforge.opencamera.R
 import java.lang.ref.WeakReference
@@ -63,7 +65,7 @@ import java.lang.ref.WeakReference
  *
  * The layout is Mudita's own camera's: the viewfinder above a white bar of three circles —
  * the last picture, the shutter, the flash. Above that bar one line more than Mudita's, to switch
- * between photo and video and to reach the settings.
+ * between photo and video, to turn on HDR or Night, and to reach the settings.
  */
 object CameraLayer {
 
@@ -76,6 +78,10 @@ object CameraLayer {
         val onTimer: Boolean = false,
         /** The camera could not be opened — on a Kompakt, most often the side switch. */
         val failed: Boolean = false,
+        /** Open Camera's photo mode: standard, HDR or noise reduction (shown as Night). */
+        val mode: MyApplicationInterface.PhotoMode = MyApplicationInterface.PhotoMode.Standard,
+        val canHdr: Boolean = false,
+        val canNight: Boolean = false,
     )
 
     internal var snapshot by mutableStateOf(Snapshot())
@@ -145,6 +151,11 @@ object CameraLayer {
         if (!prefs.contains(PreferenceKeys.FirstTimePreferenceKey)) {
             prefs.edit().putBoolean(PreferenceKeys.FirstTimePreferenceKey, true).apply()
         }
+        // Open Camera explains HDR in a dialog the first time it is chosen; the strip says
+        // enough, and a dialog over the viewfinder is a second press to get back to it.
+        if (!prefs.contains(PreferenceKeys.HDRInfoPreferenceKey)) {
+            prefs.edit().putBoolean(PreferenceKeys.HDRInfoPreferenceKey, true).apply()
+        }
     }
 
     /**
@@ -189,7 +200,13 @@ object CameraLayer {
      */
     @JvmStatic
     fun refresh() {
-        val preview = host.get()?.preview ?: return
+        val activity = host.get() ?: return
+        val preview = activity.preview ?: return
+        // Neither mode for a photo another app asked for: it wants one picture back, quickly.
+        val modes = activity.intent?.action !in listOf(
+            MediaStore.ACTION_IMAGE_CAPTURE,
+            MediaStore.ACTION_IMAGE_CAPTURE_SECURE,
+        )
         snapshot = Snapshot(
             flash = preview.currentFlashValue,
             hasFlash = preview.supportsFlash(),
@@ -197,7 +214,29 @@ object CameraLayer {
             recording = preview.isVideoRecording,
             onTimer = preview.isOnTimer,
             failed = preview.openCameraFailed(),
+            mode = activity.applicationInterface.photoMode,
+            canHdr = modes && activity.supportsHDR(),
+            canNight = modes && activity.supportsNoiseReduction(),
         )
+    }
+
+    /**
+     * HDR or Night on, or back to a plain photo — written where Open Camera's own photo-mode
+     * menu writes it, then the camera set up again as that menu does, since both modes take a
+     * burst of frames rather than one.
+     */
+    internal fun choose(activity: MainActivity, mode: MyApplicationInterface.PhotoMode) {
+        val now = activity.applicationInterface.photoMode
+        val next = if (now == mode) MyApplicationInterface.PhotoMode.Standard else mode
+        val value = when (next) {
+            MyApplicationInterface.PhotoMode.HDR -> "preference_photo_mode_hdr"
+            MyApplicationInterface.PhotoMode.NoiseReduction -> "preference_photo_mode_noise_reduction"
+            else -> "preference_photo_mode_std"
+        }
+        Defaults.prefs(activity).edit().putString(PreferenceKeys.PhotoModePreferenceKey, value).apply()
+        activity.applicationInterface.drawPreview.updateSettings()
+        activity.updateForSettings(true, null, false, true)
+        refresh()
     }
 
     /**
@@ -218,13 +257,17 @@ object CameraLayer {
     private const val GALLERY = "com.wanderwildwood.garo"
     private const val GALLERY_NEW_PICTURE = "com.wanderwildwood.garo.action.NEW_PICTURE"
 
-    /** The three flash states Mudita's camera offers; Open Camera's others are skipped over. */
-    private val FLASHES = listOf("flash_auto", "flash_off", "flash_on")
+    /**
+     * The three flash states Mudita's camera offers; Open Camera's others are skipped over.
+     * "On" is Open Camera's torch: the light comes on when it is chosen and stays on, so the
+     * picture can be framed by it, rather than firing only as the photo is taken.
+     */
+    private val FLASHES = listOf("flash_auto", "flash_off", "flash_torch")
 
     internal fun cycleFlash(activity: MainActivity) {
         val preview = activity.preview ?: return
         repeat(preview.supportedFlashValues?.size ?: 0) {
-            preview.cycleFlash(true, true)
+            preview.cycleFlash(false, true)
             if (preview.currentFlashValue in FLASHES) {
                 refresh()
                 return
@@ -324,6 +367,18 @@ private fun Camera(activity: MainActivity) {
                 }
             }
             Spacer(Modifier.weight(1f))
+            if (!shot.video && !shot.recording) {
+                if (shot.canHdr) {
+                    Mode(stringResource(R.string.shashinki_hdr), chosen = shot.mode == MyApplicationInterface.PhotoMode.HDR, enabled = true, toggle = true) {
+                        CameraLayer.choose(activity, MyApplicationInterface.PhotoMode.HDR)
+                    }
+                }
+                if (shot.canNight) {
+                    Mode(stringResource(R.string.shashinki_night), chosen = shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction, enabled = true, toggle = true) {
+                        CameraLayer.choose(activity, MyApplicationInterface.PhotoMode.NoiseReduction)
+                    }
+                }
+            }
             // Said, not animated: a running clock would repaint this strip every second.
             val status = when {
                 shot.recording -> stringResource(R.string.shashinki_recording)
@@ -364,13 +419,13 @@ private fun Camera(activity: MainActivity) {
             if (shot.hasFlash && !shot.video) {
                 Ring(
                     icon = when (shot.flash) {
-                        "flash_on" -> Icons.FlashOn
+                        "flash_torch" -> Icons.FlashOn
                         "flash_off" -> Icons.FlashOff
                         else -> Icons.FlashAuto
                     },
                     description = stringResource(
                         when (shot.flash) {
-                            "flash_on" -> R.string.shashinki_cd_flash_on
+                            "flash_torch" -> R.string.shashinki_cd_flash_on
                             "flash_off" -> R.string.shashinki_cd_flash_off
                             else -> R.string.shashinki_cd_flash_auto
                         },
@@ -386,13 +441,15 @@ private fun Camera(activity: MainActivity) {
 }
 
 @Composable
-private fun Mode(label: String, chosen: Boolean, enabled: Boolean, onClick: () -> Unit) {
+private fun Mode(label: String, chosen: Boolean, enabled: Boolean, toggle: Boolean = false, onClick: () -> Unit) {
     TextMMD(
         text = label,
         style = MaterialTheme.typography.bodyMedium,
         fontWeight = if (chosen) FontWeight.Bold else null,
         modifier = Modifier
-            .clickable(enabled = enabled && !chosen, onClick = onClick)
+            // Photo and video are one choice, so the chosen one has nothing to do; HDR and Night
+            // are each on or off, so pressing the chosen one turns it off.
+            .clickable(enabled = enabled && (toggle || !chosen), onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 10.dp),
     )
 }

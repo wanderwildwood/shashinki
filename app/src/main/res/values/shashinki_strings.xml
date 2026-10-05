@@ -6,6 +6,10 @@
     <!-- Main screen -->
     <string name="shashinki_photo">Photo</string>
     <string name="shashinki_video">Video</string>
+    <!-- Photo modes, each on or off. HDR joins three exposures so bright skies keep their detail -->
+    <string name="shashinki_hdr">HDR</string>
+    <!-- Joins several quick frames into one, for less grain in the dark -->
+    <string name="shashinki_night">Night</string>
     <!-- Shown beside the mode while a video is being recorded -->
     <string name="shashinki_recording">Recording</string>
     <!-- Shown while the self-timer counts down -->

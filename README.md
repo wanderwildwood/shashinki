@@ -21,7 +21,12 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   the shutter is a square and the line says so; there is no running clock.
 - **The last picture** opens in the phone's gallery — Gallery (画廊 garō), if it is
   installed, inside its folder.
-- **Flash** cycles through automatic, off and on in place, as Mudita's own camera does.
+- **HDR and Night**, on the same line, each on or off. HDR joins three exposures into one, so a
+  bright sky keeps its detail; Night joins several quick frames, for less grain in the dark.
+  Both are Open Camera's own, and take a few seconds to save — hold still until the gallery
+  circle changes.
+- **Flash** cycles through automatic, off and on in place, as Mudita's own camera does. On is
+  a steady light, lit from the moment it is chosen, so the picture can be framed by it.
 - **Tap the viewfinder** to focus there; pinch to zoom.
 - **QR codes are read as you point at them.** A card says what the code is — a web address,
   a Wi-Fi network, a contact, an email, a phone number, a place, a sign-in code — and offers
