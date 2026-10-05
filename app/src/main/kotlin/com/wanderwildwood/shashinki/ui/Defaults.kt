@@ -17,6 +17,7 @@ object Defaults {
 
     private const val APPLIED = "shashinki_defaults_v1"
     private const val CAMERA2 = "shashinki_camera2"
+    private const val CAMERA_FOLDER = "shashinki_camera_folder"
     const val GRID = "shashinki_grid"
     const val QR = "shashinki_qr"
 
@@ -33,6 +34,16 @@ object Defaults {
                 .putString(PreferenceKeys.CameraAPIPreferenceKey, "preference_camera_api_camera2")
                 .putBoolean(CAMERA2, true)
                 .apply()
+        }
+        // DCIM/Camera, where Android's own camera puts photos, rather than Open Camera's
+        // DCIM/OpenCamera. Moved once on the copy already on a phone; a folder of one's own
+        // choosing stays. Photos already taken stay where they are.
+        if (!prefs.getBoolean(CAMERA_FOLDER, false)) {
+            val edit = prefs.edit().putBoolean(CAMERA_FOLDER, true)
+            if (prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "OpenCamera") == "OpenCamera") {
+                edit.putString(PreferenceKeys.SaveLocationPreferenceKey, "Camera")
+            }
+            edit.apply()
         }
         if (prefs.getBoolean(APPLIED, false)) return
         prefs.edit()

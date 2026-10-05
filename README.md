@@ -31,9 +31,9 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
 - **Nine settings**: reading QR codes, picture size, video size, picture quality, a self-timer, the shutter
   sound, writing where a photo was taken into it, a grid, and the folder under DCIM.
 
-Photos and videos go to `DCIM/OpenCamera` unless the folder is changed, so they appear in
-Gallery. With Gallery's backup turned on, Camera tells Gallery the moment it has saved a photo,
-and it goes up to Immich then.
+Photos and videos go to `DCIM/Camera`, where Android's own camera puts them, unless the folder
+is changed, so they appear in Gallery. With Gallery's backup turned on, Camera tells Gallery the
+moment it has saved a photo, and it goes up to Immich then.
 
 When the camera cannot be opened — on a Kompakt, usually because the switch on the left side
 has turned it off — the screen says so, and it says so too if the camera stops or a photo

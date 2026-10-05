@@ -56,7 +56,7 @@ public class SaveLocationHandler {
                 String new_folder;
                 if( res.alt == null ) {
                     // no alternative, fall back to default
-                    new_folder = "OpenCamera";
+                    new_folder = "Camera";
                 }
                 else {
                     // replace with the alternative
@@ -261,7 +261,7 @@ public class SaveLocationHandler {
         editText.setHint(main_activity.getResources().getString(R.string.preference_save_location));
         editText.setInputType(InputType.TYPE_CLASS_TEXT);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(main_activity);
-        editText.setText(sharedPreferences.getString(PreferenceKeys.SaveLocationPreferenceKey, "OpenCamera"));
+        editText.setText(sharedPreferences.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera"));
         InputFilter filter = new InputFilter() {
             // whilst Android seems to allow any characters on internal memory, SD cards are typically formatted with FAT32
             final String disallowed = "|\\?*<\":>";

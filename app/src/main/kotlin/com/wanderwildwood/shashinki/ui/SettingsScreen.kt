@@ -171,7 +171,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 }
             }
             item {
-                val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "OpenCamera") ?: "OpenCamera"
+                val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
                 Setting(
                     title = stringResource(R.string.shashinki_folder),
                     value = "DCIM/$folder",
@@ -222,7 +222,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
 
     if (folderOpen) {
         FolderDialog(
-            initial = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "OpenCamera") ?: "OpenCamera",
+            initial = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera",
             onSave = {
                 prefs.edit().putString(PreferenceKeys.SaveLocationPreferenceKey, it).apply()
                 changed()
