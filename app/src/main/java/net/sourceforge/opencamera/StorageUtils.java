@@ -1787,7 +1787,18 @@ public class StorageUtils {
                 // Update: on Galaxy S10e with Android 11 at least, no longer seem to have problems with RAW, but leave
                 // the check for is_raw just in case for older devices.
 
-                if( preference_gallery.equals("preference_gallery_include_legacy") ) {
+                // shashinki: our own Gallery first, when it is installed.
+                try {
+                    Intent intent = new Intent(MediaStore.ACTION_REVIEW, uri);
+                    intent.setPackage("com.wanderwildwood.garo");
+                    context.startActivity(intent);
+                    done = true;
+                }
+                catch(ActivityNotFoundException e) {
+                    // not installed: ask Android for any gallery, as before
+                }
+
+                if( !done && preference_gallery.equals("preference_gallery_include_legacy") ) {
                     if( MyDebug.LOG )
                         Log.d(TAG, "try REVIEW_ACTION");
                     try {

@@ -19,8 +19,8 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
 
 - **Photos and video.** One line above the shutter switches between them. While recording,
   the shutter is a square and the line says so; there is no running clock.
-- **The last picture** opens in the phone's gallery — Gallery (画廊 garō), if it is
-  installed, inside its folder.
+- **The last picture** opens in Gallery (画廊 garō), inside its folder, whenever Gallery is
+  installed, even if another gallery is the phone's default; otherwise in the phone's gallery.
 - **HDR and Night**, on the same line, each on or off. HDR joins three exposures into one, so a
   bright sky keeps its detail; Night joins several quick frames, for less grain in the dark.
   Both are Open Camera's own, and take a few seconds to save — hold still until the gallery
