@@ -87,6 +87,7 @@
         </intent>
         <!-- The apps a QR code is handed to, so the camera can tell which are on the phone. -->
         <package android:name="com.wanderwildwood.satsuire" />
+        <package android:name="com.wanderwildwood.aikotoba" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="http" />
@@ -98,6 +99,10 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="otpauth" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="otpauth-migration" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />

@@ -928,6 +928,27 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
     }
 
+    /** shashinki: focus and meter on a point of the view (where a QR code was seen), as a tap
+     *  there does, without a tap's other effects. Not while a photo is being taken or a video
+     *  recorded. Undone by clearFocusAreas().
+     */
+    public void focusAt(float x, float y) {
+        if( camera_controller == null || using_face_detection || camera_controller.isCameraExtension()
+                || preview_started_state != PREVIEW_STARTED || isTakingPhotoOrOnTimer() || isVideoRecording() )
+            return;
+        float [] coords = {x, y};
+        calculatePreviewToCameraMatrix();
+        preview_to_camera_matrix.mapPoints(coords);
+        cancelAutoFocus();
+        if( camera_controller.setFocusAndMeteringArea(getAreas(coords[0], coords[1])) ) {
+            this.has_focus_area = true;
+            this.focus_area_time = System.currentTimeMillis();
+            this.focus_camera_x = coords[0];
+            this.focus_camera_y = coords[1];
+        }
+        tryAutoFocus(false, true);
+    }
+
     public void clearFocusAreas() {
         if( MyDebug.LOG )
             Log.d(TAG, "clearFocusAreas()");

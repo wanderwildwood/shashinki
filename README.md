@@ -29,12 +29,16 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
 - **Flash** cycles through automatic, off and on in place, as Mudita's own camera does. On is
   a steady light, lit from the moment it is chosen, so the picture can be framed by it.
 - **Tap the viewfinder** to focus there; pinch to zoom.
-- **QR codes are read as you point at them.** The code comes up on a screen of its own, drawn
+- **QR codes are read as you point at them**, from the live viewfinder a few times a second,
+  with no photo to take; a code is focused on as soon as it is seen, and taken only once it
+  fills a fair part of the picture, so a poster across the room is left alone. A read gives
+  one short tick, and the code comes up on a screen of its own, drawn
   clean, with what it is — a web address, a Wi-Fi network, a contact, an email, a phone number,
   a place, a sign-in code — and the one thing to do with it, handed to the app on the phone
   that does that: the browser, Android's own "save this network", Contacts, Email, Messaging,
   a map. **Save to Wallet** keeps the code as a card in Wallet (札入 satsuire), where it is on
-  the phone, to show to a scanner or open again. Nothing opens until a button is pressed. Copy
+  the phone, to show to a scanner or open again. A two-step sign-in code offers **Add to
+  Passwords** (合言葉 aikotoba) instead, where it is on the phone. Nothing opens until a button is pressed. Copy
   is always there. Reading can be turned off.
 - **Nine settings**: reading QR codes, picture size, video size, picture quality, a self-timer, the shutter
   sound, writing where a photo was taken into it, a grid, and the folder under DCIM.

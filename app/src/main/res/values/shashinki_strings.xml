@@ -71,6 +71,7 @@
     <string name="qr_copy">Copy</string>
     <string name="qr_copied">Copied</string>
     <string name="qr_save_wallet">Save to Wallet</string>
+    <string name="qr_add_passwords">Add to Passwords</string>
     <string name="qr_save_failed">The code could not be handed to Wallet.</string>
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_folder">Folder</string>

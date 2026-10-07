@@ -10,6 +10,7 @@ import android.net.Uri
 import android.net.wifi.WifiNetworkSuggestion
 import android.provider.ContactsContract
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import android.view.TextureView
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -85,27 +86,29 @@ data class Found(
     /** The button's word, and what it does; null where there is nothing to open, only to copy. */
     val action: Int?,
     val intent: Intent?,
+    /** Bound for Passwords: a secret, so not offered to Wallet as well. */
+    val signIn: Boolean = false,
 )
 
 internal fun describe(context: Context, parsed: ParsedResult): Found {
     val raw = parsed.displayResult.orEmpty()
     fun ifAnyone(intent: Intent): Intent? = intent.takeIf { it.resolveActivity(context.packageManager) != null }
+    // Sign-in codes first, whatever ZXing made of them: an account like "ada@example.org" after
+    // the issuer's colon looks to its link parser like a login hidden in the address, and it
+    // hands those back as plain text.
+    val text = parsed.displayResult.orEmpty().trim()
+    if (text.startsWith("otpauth://", ignoreCase = true) || text.startsWith("otpauth-migration://", ignoreCase = true)) {
+        return signIn(context, text)
+    }
     return when (parsed) {
         is URIParsedResult -> {
             val uri = Uri.parse(parsed.uri)
             val scheme = uri.scheme.orEmpty().lowercase()
             val kind = when (scheme) {
                 "http", "https" -> R.string.qr_kind_web
-                "otpauth" -> R.string.qr_kind_sign_in
                 else -> R.string.qr_kind_link
             }
-            val shown = when (scheme) {
-                "http", "https" -> parsed.uri
-                // otpauth://totp/Issuer:account?secret=… — the issuer and account, never the secret.
-                "otpauth" -> uri.path.orEmpty().trimStart('/').ifEmpty { uri.getQueryParameter("issuer").orEmpty() }
-                else -> parsed.uri
-            }
-            Found(raw, kind, shown, R.string.qr_open, ifAnyone(Intent(Intent.ACTION_VIEW, uri)))
+            Found(raw, kind, parsed.uri, R.string.qr_open, ifAnyone(Intent(Intent.ACTION_VIEW, uri)))
         }
         is WifiParsedResult -> {
             val suggestion = WifiNetworkSuggestion.Builder().setSsid(parsed.ssid).apply {
@@ -162,9 +165,30 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
 }
 
 /**
- * Looks at the viewfinder about twice a second while [enabled], and reports a code when it sees
- * one. The frame is taken small — enough to read a code, a fraction of the work of the full
- * picture — and read off the main thread. Nothing on screen changes until a code is found.
+ * A two-step sign-in code: to Passwords when it is on the phone, which keeps it; otherwise to
+ * whichever authenticator answers the link. Never the secret on screen.
+ */
+private fun signIn(context: Context, text: String): Found {
+    val uri = Uri.parse(text)
+    val shown = if (uri.scheme.equals("otpauth", ignoreCase = true)) {
+        // otpauth://totp/Issuer:account?secret=… — the issuer and account.
+        uri.path.orEmpty().trimStart('/').ifEmpty { uri.getQueryParameter("issuer").orEmpty() }
+    } else {
+        // A Google Authenticator transfer is nothing but secrets.
+        ""
+    }
+    val view = Intent(Intent.ACTION_VIEW, uri)
+    val passwords = Intent(view).setPackage(PASSWORDS).takeIf { it.resolveActivity(context.packageManager) != null }
+    return if (passwords != null) Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_add_passwords, passwords, signIn = true)
+    else Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_open, view.takeIf { it.resolveActivity(context.packageManager) != null })
+}
+
+/**
+ * Looks at the viewfinder a few times a second while [enabled], and reports a code when it
+ * sees one; there is no photo to take first. The frame is taken small — enough to read a code,
+ * a fraction of the work of the full picture — and read off the main thread. A code seen but
+ * not yet readable, or too small in the picture to be what the camera is pointed at, is focused
+ * on, as a tap on it would. A read gives one short haptic tick. Never while a video records.
  */
 @Composable
 internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) -> Unit) {
@@ -176,17 +200,32 @@ internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) 
     val resumed by lifecycle.currentStateFlow.collectAsState()
     LaunchedEffect(enabled, resumed.isAtLeast(Lifecycle.State.RESUMED)) {
         if (!enabled || !resumed.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
+        var focusedAt = 0L
         while (isActive) {
             delay(INTERVAL_MS)
             val preview = activity.preview ?: continue
-            if (!preview.isPreviewStarted || preview.isOpeningCamera || preview.isTakingPhotoOrOnTimer) continue
+            if (!preview.isPreviewStarted || preview.isOpeningCamera || preview.isTakingPhotoOrOnTimer || preview.isVideoRecording) continue
             val view = preview.view as? TextureView ?: continue
             if (!view.isAvailable || view.width == 0) continue
             val frame = view.getBitmap(FRAME_WIDTH, FRAME_WIDTH * view.height / view.width) ?: continue
-            val parsed = withContext(Dispatchers.Default) {
+            val scale = view.width.toFloat() / frame.width
+            val seen = withContext(Dispatchers.Default) {
                 try { QrReader.read(frame) } finally { frame.recycle() }
             }
-            if (parsed != null) report(describe(activity, parsed))
+            when (seen) {
+                is QrReader.Seen.Code -> {
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    report(describe(activity, seen.parsed))
+                }
+                is QrReader.Seen.Place -> {
+                    val now = System.currentTimeMillis()
+                    if (now - focusedAt > FOCUS_EVERY_MS) {
+                        focusedAt = now
+                        preview.focusAt(seen.x * scale, seen.y * scale)
+                    }
+                }
+                null -> Unit
+            }
         }
     }
 }
@@ -205,7 +244,7 @@ internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) 
 internal fun QrScreen(found: Found, onClose: () -> Unit) {
     val context = LocalContext.current
     val drawn = remember(found.raw) { draw(found.raw) }
-    val wallet = remember(found.raw) { walletIntent(context) }
+    val wallet = remember(found.raw) { if (found.signIn) null else walletIntent(context) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -326,10 +365,14 @@ private fun keep(context: Context, drawn: Bitmap): Uri {
     return FileProvider.getUriForFile(context, context.packageName + ".qr", file)
 }
 
-private const val INTERVAL_MS = 500L
+/** About three frames a second: quick to notice a code, light on the viewfinder and battery. */
+private const val INTERVAL_MS = 330L
+/** How often a code not yet readable is focused on again. */
+private const val FOCUS_EVERY_MS = 2000L
 private const val FRAME_WIDTH = 480
 /** Small enough that the four buttons under it fit the panel without scrolling. */
 private val QR_SIZE = 208.dp
 /** About this wide when shared: ten pixels a module for the usual code, plenty for a reader. */
 private const val SHARED_PX = 600
 private const val WALLET = "com.wanderwildwood.satsuire"
+private const val PASSWORDS = "com.wanderwildwood.aikotoba"
