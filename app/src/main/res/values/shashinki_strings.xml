@@ -43,7 +43,7 @@
     <string name="shashinki_location_note">Written into each photo. Anyone you send it to can read it.</string>
     <string name="shashinki_grid">Grid</string>
     <string name="shashinki_qr">Read QR codes</string>
-    <string name="shashinki_qr_note">A code in the viewfinder is read and offered to the app it belongs to. Nothing opens until you press.</string>
+    <string name="shashinki_qr_note">A code in the viewfinder is shown on its own, with the app it belongs to and Wallet to keep it. Nothing opens until you press.</string>
 
     <!-- QR card: the kind of thing a code holds -->
     <string name="qr_kind_web">Web address</string>
@@ -65,6 +65,8 @@
     <string name="qr_show">Show on a map</string>
     <string name="qr_copy">Copy</string>
     <string name="qr_copied">Copied</string>
+    <string name="qr_save_wallet">Save to Wallet</string>
+    <string name="qr_save_failed">The code could not be handed to Wallet.</string>
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_folder">Folder</string>
     <string name="shashinki_folder_note">Under DCIM on the phone. A name only.</string>

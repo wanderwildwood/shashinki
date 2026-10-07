@@ -4,35 +4,52 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.net.wifi.WifiNetworkSuggestion
 import android.provider.ContactsContract
 import android.provider.Settings
 import android.view.TextureView
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.google.zxing.client.result.AddressBookParsedResult
 import com.google.zxing.client.result.EmailAddressParsedResult
 import com.google.zxing.client.result.GeoParsedResult
@@ -43,10 +60,12 @@ import com.google.zxing.client.result.URIParsedResult
 import com.google.zxing.client.result.WifiParsedResult
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import com.mudita.mmd.components.text.TextMMD
+import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import java.io.File
 import net.sourceforge.opencamera.MainActivity
 import net.sourceforge.opencamera.R
 
@@ -172,55 +191,145 @@ internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) 
     }
 }
 
-/** The card above the bar: what the code is, the button that acts on it, Copy, and Close. */
+/**
+ * The code, on a screen of its own: drawn again clean from what it says, so it reads the same
+ * on this panel as it did on the poster, the thing it says, and the ways to act on it. The
+ * viewfinder is behind this; the back arrow or Close returns to it.
+ *
+ * A button goes to the app that answers it — the browser, Contacts, the dialler — and to
+ * Wallet, which keeps the code as a card to be shown to a scanner later. Wallet is handed the
+ * drawn picture, which it reads as it reads any other, so it learns the kind of code on its own.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun QrCard(found: Found, onClose: () -> Unit) {
+internal fun QrScreen(found: Found, onClose: () -> Unit) {
     val context = LocalContext.current
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface),
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-    ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextMMD(text = stringResource(found.kind), style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-                BarButton(Icons.Close, stringResource(R.string.shashinki_close), onClose)
+    val drawn = remember(found.raw) { draw(found.raw) }
+    val wallet = remember(found.raw) { walletIntent(context) }
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
+            TopAppBarMMD(
+                title = { TextMMD(text = stringResource(found.kind), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                navigationIcon = { BarButton(Icons.Back, stringResource(R.string.shashinki_close), onClose) },
+            )
+        },
+    ) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp).verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(8.dp))
+            if (drawn != null) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Image(
+                        bitmap = drawn.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        // Whole pixels, so every module stays black or white on the panel.
+                        filterQuality = FilterQuality.None,
+                        modifier = Modifier.size(QR_SIZE),
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
             }
             TextMMD(
                 text = found.shown,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
             )
             if (found.action != null && found.intent == null) {
                 // Say it, rather than offer a button that does nothing.
-                TextMMD(text = stringResource(R.string.qr_no_app), style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(6.dp))
+                TextMMD(text = stringResource(R.string.qr_no_app), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
             }
-            Spacer(Modifier.height(10.dp))
-            Row(Modifier.fillMaxWidth()) {
+            Spacer(Modifier.height(12.dp))
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (found.action != null && found.intent != null) {
-                    OutlinedButtonMMD(
-                        onClick = {
-                            runCatching { context.startActivity(found.intent) }
-                            onClose()
-                        },
-                        modifier = Modifier.weight(1f).height(44.dp),
-                    ) { TextMMD(text = stringResource(found.action), style = MaterialTheme.typography.bodySmall) }
-                    Spacer(Modifier.width(10.dp))
+                    Choice(stringResource(found.action)) {
+                        runCatching { context.startActivity(found.intent) }
+                        onClose()
+                    }
                 }
-                OutlinedButtonMMD(
-                    onClick = {
-                        val clip = context.getSystemService(ClipboardManager::class.java)
-                        clip?.setPrimaryClip(ClipData.newPlainText(null, found.raw))
-                        Toast.makeText(context, R.string.qr_copied, Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.weight(1f).height(44.dp),
-                ) { TextMMD(text = stringResource(R.string.qr_copy), style = MaterialTheme.typography.bodySmall) }
+                if (wallet != null && drawn != null) {
+                    Choice(stringResource(R.string.qr_save_wallet)) {
+                        val picture = runCatching { keep(context, drawn) }.getOrNull()
+                        if (picture != null) {
+                            wallet.putExtra(Intent.EXTRA_STREAM, picture)
+                            wallet.putExtra(Intent.EXTRA_TEXT, found.raw)
+                            wallet.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            runCatching { context.startActivity(wallet) }
+                            onClose()
+                        } else {
+                            Toast.makeText(context, R.string.qr_save_failed, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                Choice(stringResource(R.string.qr_copy)) {
+                    val clip = context.getSystemService(ClipboardManager::class.java)
+                    clip?.setPrimaryClip(ClipData.newPlainText(null, found.raw))
+                    Toast.makeText(context, R.string.qr_copied, Toast.LENGTH_SHORT).show()
+                }
+                Choice(stringResource(R.string.shashinki_close), onClose)
             }
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
 
+@Composable
+private fun Choice(label: String, onClick: () -> Unit) {
+    OutlinedButtonMMD(onClick = onClick, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+        TextMMD(text = label, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/**
+ * The code drawn again from its text, one pixel a module plus the four-module quiet zone a
+ * reader needs; the screen scales it up without smoothing. Null for text too long to encode.
+ */
+internal fun draw(raw: String): Bitmap? = try {
+    val matrix = QRCodeWriter().encode(
+        raw, BarcodeFormat.QR_CODE, 0, 0,
+        mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M, EncodeHintType.MARGIN to 4),
+    )
+    val w = matrix.width
+    val h = matrix.height
+    val pixels = IntArray(w * h) { i -> if (matrix.get(i % w, i / w)) Color.BLACK else Color.WHITE }
+    Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
+} catch (e: Exception) {
+    null
+}
+
+/** Wallet, if it is on the phone, ready to be handed a picture with a code in it. */
+private fun walletIntent(context: Context): Intent? {
+    val send = Intent(Intent.ACTION_SEND).setType("image/png").setPackage(WALLET)
+    return send.takeIf { it.resolveActivity(context.packageManager) != null }
+}
+
+/**
+ * The drawn code as a picture file another app can read, scaled up so a reader finds it at a
+ * glance. In the cache, under one name: the last code shared is the only one kept.
+ */
+private fun keep(context: Context, drawn: Bitmap): Uri {
+    val dir = File(context.cacheDir, "qr").apply { mkdirs() }
+    val file = File(dir, "qr.png")
+    val scale = (SHARED_PX / drawn.width).coerceAtLeast(1)
+    val big = Bitmap.createScaledBitmap(drawn, drawn.width * scale, drawn.height * scale, false)
+    try {
+        file.outputStream().use { big.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    } finally {
+        big.recycle()
+    }
+    return FileProvider.getUriForFile(context, context.packageName + ".qr", file)
+}
+
 private const val INTERVAL_MS = 500L
 private const val FRAME_WIDTH = 480
+/** Small enough that the four buttons under it fit the panel without scrolling. */
+private val QR_SIZE = 208.dp
+/** About this wide when shared: ten pixels a module for the usual code, plenty for a reader. */
+private const val SHARED_PX = 600
+private const val WALLET = "com.wanderwildwood.satsuire"

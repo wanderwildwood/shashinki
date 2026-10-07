@@ -299,13 +299,22 @@ private fun Camera(activity: MainActivity) {
         return
     }
 
-    // A code the viewfinder has read, waiting on the card; and the last one closed, which is
-    // not offered again while it is still in front of the lens.
+    // A code the viewfinder has read, shown on its own screen; and the last one closed, which
+    // is not offered again while it is still in front of the lens.
     var found by remember { mutableStateOf<Found?>(null) }
     var closed by remember { mutableStateOf<Pair<String, Long>?>(null) }
     QrWatch(activity, enabled = found == null && !shot.video && !shot.failed && Defaults.qr(activity)) { f ->
         val (raw, at) = closed ?: ("" to 0L)
         if (f.raw != raw || System.currentTimeMillis() - at > QR_QUIET_MS) found = f
+    }
+    found?.let { f ->
+        val close = {
+            closed = f.raw to System.currentTimeMillis()
+            found = null
+        }
+        BackHandler(onBack = close)
+        QrScreen(f, onClose = close)
+        return
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -315,14 +324,6 @@ private fun Camera(activity: MainActivity) {
             if (Defaults.grid(activity)) Grid()
             if (CameraLayer.blinking) {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
-            }
-            found?.let { f ->
-                Box(Modifier.align(Alignment.BottomCenter)) {
-                    QrCard(f) {
-                        closed = f.raw to System.currentTimeMillis()
-                        found = null
-                    }
-                }
             }
             val message = when {
                 shot.failed -> R.string.shashinki_no_camera
