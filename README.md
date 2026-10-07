@@ -13,7 +13,7 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
 
 | | | | |
 |---|---|---|---|
-| ![Taking a photo](screenshots/01-photo.png) | ![Recording](screenshots/02-video.png) | ![Settings](screenshots/03-settings.png) | ![Picture size](screenshots/04-size.png) |
+| ![Taking a photo](screenshots/01-photo.png) | ![Recording](screenshots/02-video.png) | ![Settings](screenshots/03-settings.png) | ![A QR code, read](screenshots/04-qr.png) |
 
 ## What it does
 
