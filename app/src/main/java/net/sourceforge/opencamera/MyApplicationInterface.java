@@ -2844,6 +2844,8 @@ public class MyApplicationInterface extends BasicApplicationInterface {
             used_front_screen_flash = false;
         }
         drawPreview.cameraInOperation(in_operation);
+        if( !in_operation )
+            com.wanderwildwood.shashinki.ui.CameraLayer.capturing(false); // shashinki
         main_activity.getMainUI().showGUI(!in_operation, is_video);
     }
 
@@ -2863,6 +2865,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
         n_capture_images = 0;
         n_capture_images_raw = 0;
         com.wanderwildwood.shashinki.ui.CameraLayer.blink(); // shashinki: the overlay that would flash draws nothing here
+        com.wanderwildwood.shashinki.ui.CameraLayer.capturing(true); // shashinki
         drawPreview.onCaptureStarted();
 
         if( getPhotoMode() == PhotoMode.X_Night ) {
@@ -2877,6 +2880,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
 
         // clear any toasts displayed during progress (e.g., preference_nr_mode_low_light_message, or onExtensionProgress())
         main_activity.getPreview().clearActiveFakeToast();
+        com.wanderwildwood.shashinki.ui.CameraLayer.capturing(false); // shashinki
 
         PhotoMode photo_mode = getPhotoMode();
         if( main_activity.getPreview().isVideo() ) {

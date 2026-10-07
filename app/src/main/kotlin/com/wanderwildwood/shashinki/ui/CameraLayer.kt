@@ -78,8 +78,14 @@ object CameraLayer {
         val onTimer: Boolean = false,
         /** The camera could not be opened — on a Kompakt, most often the side switch. */
         val failed: Boolean = false,
-        /** Open Camera's photo mode: standard, HDR or noise reduction (shown as Night). */
+        /**
+         * Open Camera's photo mode: standard, DRO (shown as HDR), HDR (shown as HDR+) or noise
+         * reduction (shown as Night).
+         */
         val mode: MyApplicationInterface.PhotoMode = MyApplicationInterface.PhotoMode.Standard,
+        /** One-shot HDR: Open Camera's DRO, which brightens the shadows of a single frame. */
+        val canDro: Boolean = false,
+        /** Three-shot HDR: three exposures joined, which needs the phone held still. */
         val canHdr: Boolean = false,
         val canNight: Boolean = false,
     )
@@ -112,6 +118,19 @@ object CameraLayer {
      */
     internal var blinking by mutableStateOf(false)
 
+    /**
+     * True from the moment a photo starts until Open Camera has its frames. Only said for the
+     * modes that take several frames (HDR+ and Night); a one-frame photo is over before the
+     * words would be drawn.
+     */
+    internal var capturing by mutableStateOf(false)
+
+    /** Called by Open Camera as a capture starts and once it is over, or the camera stops. */
+    @JvmStatic
+    fun capturing(on: Boolean) {
+        Handler(Looper.getMainLooper()).post { capturing = on }
+    }
+
     @JvmStatic
     fun blink() {
         val main = Handler(Looper.getMainLooper())
@@ -124,7 +143,10 @@ object CameraLayer {
     /** Called by Open Camera's error hooks: the camera stopped, or a photo failed. */
     @JvmStatic
     fun trouble(message: Int) {
-        Handler(Looper.getMainLooper()).post { trouble = message }
+        Handler(Looper.getMainLooper()).post {
+            trouble = message
+            capturing = false
+        }
     }
 
     /** Called when the camera has (re)opened: any earlier trouble is over. */
@@ -215,20 +237,42 @@ object CameraLayer {
             onTimer = preview.isOnTimer,
             failed = preview.openCameraFailed(),
             mode = activity.applicationInterface.photoMode,
+            canDro = modes && activity.supportsDRO(),
             canHdr = modes && activity.supportsHDR(),
             canNight = modes && activity.supportsNoiseReduction(),
         )
     }
 
     /**
-     * HDR or Night on, or back to a plain photo — written where Open Camera's own photo-mode
-     * menu writes it, then the camera set up again as that menu does, since both modes take a
-     * burst of frames rather than one.
+     * The HDR press: off → HDR (one shot) → HDR+ (three shots) → off. One shot first, since it
+     * is the one that works handheld; a camera without exposure bracketing goes straight back
+     * to off.
      */
-    internal fun choose(activity: MainActivity, mode: MyApplicationInterface.PhotoMode) {
+    internal fun cycleHdr(activity: MainActivity) {
+        val shot = snapshot
+        val next = when (shot.mode) {
+            MyApplicationInterface.PhotoMode.DRO ->
+                if (shot.canHdr) MyApplicationInterface.PhotoMode.HDR else MyApplicationInterface.PhotoMode.Standard
+            MyApplicationInterface.PhotoMode.HDR -> MyApplicationInterface.PhotoMode.Standard
+            else ->
+                if (shot.canDro) MyApplicationInterface.PhotoMode.DRO else MyApplicationInterface.PhotoMode.HDR
+        }
+        choose(activity, next)
+    }
+
+    /** Night on, or back to a plain photo. */
+    internal fun toggle(activity: MainActivity, mode: MyApplicationInterface.PhotoMode) {
         val now = activity.applicationInterface.photoMode
-        val next = if (now == mode) MyApplicationInterface.PhotoMode.Standard else mode
+        choose(activity, if (now == mode) MyApplicationInterface.PhotoMode.Standard else mode)
+    }
+
+    /**
+     * A photo mode, written where Open Camera's own photo-mode menu writes it, then the camera
+     * set up again as that menu does, since the modes differ in how many frames they take.
+     */
+    private fun choose(activity: MainActivity, next: MyApplicationInterface.PhotoMode) {
         val value = when (next) {
+            MyApplicationInterface.PhotoMode.DRO -> "preference_photo_mode_dro"
             MyApplicationInterface.PhotoMode.HDR -> "preference_photo_mode_hdr"
             MyApplicationInterface.PhotoMode.NoiseReduction -> "preference_photo_mode_noise_reduction"
             else -> "preference_photo_mode_std"
@@ -369,14 +413,22 @@ private fun Camera(activity: MainActivity) {
             }
             Spacer(Modifier.weight(1f))
             if (!shot.video && !shot.recording) {
-                if (shot.canHdr) {
-                    Mode(stringResource(R.string.shashinki_hdr), chosen = shot.mode == MyApplicationInterface.PhotoMode.HDR, enabled = true, toggle = true) {
-                        CameraLayer.choose(activity, MyApplicationInterface.PhotoMode.HDR)
+                if (shot.canDro || shot.canHdr) {
+                    // One word that says which HDR is on: plain when off, bold "HDR" for one
+                    // shot, bold "HDR+" for three.
+                    val three = shot.mode == MyApplicationInterface.PhotoMode.HDR
+                    Mode(
+                        stringResource(if (three) R.string.shashinki_hdr_plus else R.string.shashinki_hdr),
+                        chosen = three || shot.mode == MyApplicationInterface.PhotoMode.DRO,
+                        enabled = !CameraLayer.capturing,
+                        toggle = true,
+                    ) {
+                        CameraLayer.cycleHdr(activity)
                     }
                 }
                 if (shot.canNight) {
-                    Mode(stringResource(R.string.shashinki_night), chosen = shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction, enabled = true, toggle = true) {
-                        CameraLayer.choose(activity, MyApplicationInterface.PhotoMode.NoiseReduction)
+                    Mode(stringResource(R.string.shashinki_night), chosen = shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction, enabled = !CameraLayer.capturing, toggle = true) {
+                        CameraLayer.toggle(activity, MyApplicationInterface.PhotoMode.NoiseReduction)
                     }
                 }
             }
@@ -384,6 +436,10 @@ private fun Camera(activity: MainActivity) {
             val status = when {
                 shot.recording -> stringResource(R.string.shashinki_recording)
                 shot.onTimer -> stringResource(R.string.shashinki_timer_running)
+                CameraLayer.capturing && (
+                    shot.mode == MyApplicationInterface.PhotoMode.HDR ||
+                        shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction
+                    ) -> stringResource(R.string.shashinki_hold_still)
                 else -> null
             }
             if (status != null) {
