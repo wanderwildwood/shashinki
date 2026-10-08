@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Camera: launcher icon in the Mudita Kompakt stock style (81 grid, ring r=19.25 x 2.5,
+     glyph stroke 2.5, black on transparent). Built by icons/mudita-style/final.py. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="81dp"
+    android:height="81dp"
+    android:viewportWidth="81"
+    android:viewportHeight="81">
+    <path
+        android:pathData="M19.25,2.5C9.999,2.5 2.5,9.999 2.5,19.25V61.75C2.5,71.001 9.999,78.5 19.25,78.5H61.75C71.001,78.5 78.5,71.001 78.5,61.75V19.25C78.5,9.999 71.001,2.5 61.75,2.5H19.25ZM0,19.25C0,8.619 8.619,0 19.25,0H61.75C72.382,0 81,8.619 81,19.25V61.75C81,72.382 72.382,81 61.75,81H19.25C8.619,81 0,72.382 0,61.75V19.25Z"
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"/>
+    <path
+        android:pathData="M31.332,29.386C29.427,29.45 27.833,29.529 26.548,29.607C24.179,29.75 22.308,31.558 22.098,33.922C21.881,36.352 21.667,39.699 21.667,43.415C21.667,47.132 21.881,50.479 22.098,52.909C22.308,55.273 24.179,57.081 26.548,57.224C29.449,57.399 33.93,57.582 40,57.582C46.071,57.582 50.551,57.399 53.453,57.224C55.822,57.081 57.693,55.273 57.903,52.909C58.119,50.479 58.334,47.132 58.334,43.415C58.334,39.699 58.119,36.352 57.903,33.922C57.693,31.558 55.822,29.75 53.453,29.607C52.168,29.529 50.574,29.45 48.669,29.386L47.393,26.757C46.772,25.478 45.566,24.584 44.148,24.477C43.09,24.397 41.687,24.328 40,24.328C38.313,24.328 36.911,24.397 35.853,24.477C34.434,24.584 33.229,25.478 32.607,26.757L31.332,29.386Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="round"/>
+    <path
+        android:pathData="M40.008,50.527C44.348,50.527 47.866,47.009 47.866,42.67C47.866,38.33 44.348,34.813 40.008,34.813C35.669,34.813 32.151,38.33 32.151,42.67C32.151,47.009 35.669,50.527 40.008,50.527Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="round"/>
+</vector>
