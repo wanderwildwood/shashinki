@@ -44,6 +44,8 @@
     <string name="shashinki_seconds">%1$s seconds</string>
     <string name="shashinki_off">Off</string>
     <string name="shashinki_shutter_sound">Shutter sound</string>
+    <string name="shashinki_steady_video">Steady video</string>
+    <string name="shashinki_steady_video_note">Takes out some of the shake of a hand-held phone. The picture is cut a little narrower to make room.</string>
     <string name="shashinki_location">Where a photo was taken</string>
     <string name="shashinki_location_note">Written into each photo. Anyone you send it to can read it.</string>
     <string name="shashinki_grid">Grid</string>

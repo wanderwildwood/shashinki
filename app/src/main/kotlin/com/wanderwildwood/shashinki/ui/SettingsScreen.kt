@@ -99,6 +99,18 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     onClick = { picking = Pick.VIDEO },
                 )
             }
+            if (preview?.supportsVideoStabilization() == true) {
+                item {
+                    Toggle(
+                        title = stringResource(R.string.shashinki_steady_video),
+                        note = stringResource(R.string.shashinki_steady_video_note),
+                        on = prefs.getBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, true),
+                    ) {
+                        prefs.edit().putBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, it).apply()
+                        changed()
+                    }
+                }
+            }
             item {
                 val quality = prefs.getString(PreferenceKeys.QualityPreferenceKey, "90") ?: "90"
                 Setting(

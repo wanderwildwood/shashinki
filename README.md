@@ -40,8 +40,11 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   the phone, to show to a scanner or open again. A two-step sign-in code offers **Add to
   Passwords** (合言葉 aikotoba) instead, where it is on the phone. Nothing opens until a button is pressed. Copy
   is always there. Reading can be turned off.
-- **Nine settings**: reading QR codes, picture size, video size, picture quality, a self-timer, the shutter
-  sound, writing where a photo was taken into it, a grid, and the folder under DCIM.
+- **Ten settings**: reading QR codes, picture size, video size, steady video, picture quality, a
+  self-timer, the shutter sound, writing where a photo was taken into it, a grid, and the folder
+  under DCIM. Steady video is on to begin with: the camera takes out some of the shake of a
+  hand-held phone, and cuts the picture a little narrower to do it. It is there only on a camera
+  that can.
 
 Photos and videos go to `DCIM/Camera`, where Android's own camera puts them, unless the folder
 is changed, so they appear in Gallery. With Gallery's backup turned on, Camera tells Gallery the

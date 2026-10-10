@@ -19,6 +19,7 @@ object Defaults {
     private const val CAMERA2 = "shashinki_camera2"
     private const val CAMERA_FOLDER = "shashinki_camera_folder"
     private const val FLASH_TORCH = "shashinki_flash_torch"
+    private const val STEADY_VIDEO = "shashinki_steady_video"
     const val GRID = "shashinki_grid"
     const val QR = "shashinki_qr"
 
@@ -54,6 +55,14 @@ object Defaults {
                 if (key.startsWith("flash_value_") && value == "flash_on") edit.putString(key, "flash_torch")
             }
             edit.apply()
+        }
+        // Video steadied by the camera itself. The Kompakt's lens has no stabiliser of its own,
+        // and Open Camera leaves this off; turned on once, on the copy already on a phone too.
+        if (!prefs.getBoolean(STEADY_VIDEO, false)) {
+            prefs.edit()
+                .putBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, true)
+                .putBoolean(STEADY_VIDEO, true)
+                .apply()
         }
         if (prefs.getBoolean(APPLIED, false)) return
         prefs.edit()
