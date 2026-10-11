@@ -224,6 +224,10 @@ object CameraLayer {
     fun refresh() {
         val activity = host.get() ?: return
         val preview = activity.preview ?: return
+        // Posted, not called: this runs inside Open Camera's own camera-opening code.
+        if (!preview.isVideoRecording && Defaults.fullFrameOnce(activity)) {
+            Handler(Looper.getMainLooper()).post { activity.updateForSettings(true) }
+        }
         // Neither mode for a photo another app asked for: it wants one picture back, quickly.
         val modes = activity.intent?.action !in listOf(
             MediaStore.ACTION_IMAGE_CAPTURE,

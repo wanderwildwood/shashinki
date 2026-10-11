@@ -3,6 +3,7 @@ package com.wanderwildwood.shashinki.ui
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
+import net.sourceforge.opencamera.MainActivity
 import net.sourceforge.opencamera.PreferenceKeys
 
 /**
@@ -20,6 +21,7 @@ object Defaults {
     private const val CAMERA_FOLDER = "shashinki_camera_folder"
     private const val FLASH_TORCH = "shashinki_flash_torch"
     private const val STEADY_VIDEO = "shashinki_steady_video"
+    private const val FULL_FRAME = "shashinki_full_frame"
     const val GRID = "shashinki_grid"
     const val QR = "shashinki_qr"
 
@@ -77,6 +79,31 @@ object Defaults {
             .putBoolean(PreferenceKeys.PausePreviewPreferenceKey, false)
             .putBoolean(APPLIED, true)
             .apply()
+    }
+
+    /**
+     * The whole of the sensor, once: the largest 4:3 picture size. The viewfinder takes the
+     * shape of the picture, so a widescreen size left it a narrow column between black bars;
+     * at 4:3 it is nearly the width of the Kompakt's screen, and still exactly what is saved.
+     * Needs the camera open to know its sizes, so it runs from [CameraLayer.refresh]. Returns
+     * true when it changed the size and the camera has to be opened again.
+     */
+    fun fullFrameOnce(activity: MainActivity): Boolean {
+        val prefs = prefs(activity)
+        if (prefs.getBoolean(FULL_FRAME, false)) return false
+        val preview = activity.preview ?: return false
+        if (preview.cameraController == null) return false
+        val sizes = preview.getSupportedPictureSizes(true)
+        if (sizes.isNullOrEmpty()) return false
+        prefs.edit().putBoolean(FULL_FRAME, true).apply()
+        val best = sizes.filter { it.width * 3 == it.height * 4 }.maxByOrNull { it.width.toLong() * it.height } ?: return false
+        val current = preview.currentPictureSize
+        if (current != null && current.width == best.width && current.height == best.height) return false
+        val app = activity.applicationInterface
+        prefs.edit()
+            .putString(PreferenceKeys.getResolutionPreferenceKey(app.cameraIdPref, app.cameraIdSPhysicalPref), "${best.width} ${best.height}")
+            .apply()
+        return true
     }
 
     fun grid(context: Context): Boolean = prefs(context).getBoolean(GRID, false)

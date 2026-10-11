@@ -78,24 +78,41 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             )
         },
     ) { padding ->
-        @Suppress("UNUSED_EXPRESSION") version // read, so writes recompose the rows
+        // Every value is read here, outside the list, after [version]. A row's lambda that read
+        // the preferences itself captured nothing that changed, so Compose skipped it and the
+        // row went on showing the value from before the press until the screen was reopened.
+        @Suppress("UNUSED_EXPRESSION") version
+        // A size chosen here is used once the screen closes, so until then the row shows the
+        // choice, not the size the camera is still running at.
+        val pictureSize = prefs.getString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), null)
+            ?.split(' ')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }
+            ?.let { (w, h) -> w to h }
+            ?: preview?.currentPictureSize?.let { it.width to it.height }
+        val videoQuality = prefs.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), null)
+            ?.takeIf { it in preview?.videoQualityHander?.supportedVideoQuality.orEmpty() }
+            ?: preview?.videoQualityHander?.currentVideoQuality
+        val steady = prefs.getBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, true)
+        val quality = prefs.getString(PreferenceKeys.QualityPreferenceKey, "90") ?: "90"
+        val timer = prefs.getString(PreferenceKeys.TimerPreferenceKey, "0") ?: "0"
+        val shutterSound = prefs.getBoolean(PreferenceKeys.ShutterSoundPreferenceKey, true)
+        val location = prefs.getBoolean(PreferenceKeys.LocationPreferenceKey, false)
+        val qr = prefs.getBoolean(Defaults.QR, true)
+        val grid = prefs.getBoolean(Defaults.GRID, false)
+        val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
         LazyColumnMMD(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
             item { Spacer(Modifier.height(8.dp)) }
 
             item {
-                val size = preview?.currentPictureSize
                 Setting(
                     title = stringResource(R.string.shashinki_picture_size),
-                    value = size?.let { sizeLabel(it.width, it.height) } ?: stringResource(R.string.shashinki_unknown),
+                    value = pictureSize?.let { (w, h) -> sizeLabel(w, h) } ?: stringResource(R.string.shashinki_unknown),
                     onClick = { picking = Pick.PICTURE },
                 )
             }
             item {
-                val handler = preview?.videoQualityHander
-                val quality = handler?.currentVideoQuality
                 Setting(
                     title = stringResource(R.string.shashinki_video_size),
-                    value = quality?.let { preview.getCamcorderProfileDescriptionShort(it) } ?: stringResource(R.string.shashinki_unknown),
+                    value = videoQuality?.let { preview.getCamcorderProfileDescriptionShort(it) } ?: stringResource(R.string.shashinki_unknown),
                     onClick = { picking = Pick.VIDEO },
                 )
             }
@@ -104,7 +121,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     Toggle(
                         title = stringResource(R.string.shashinki_steady_video),
                         note = stringResource(R.string.shashinki_steady_video_note),
-                        on = prefs.getBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, true),
+                        on = steady,
                     ) {
                         prefs.edit().putBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, it).apply()
                         changed()
@@ -112,7 +129,6 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 }
             }
             item {
-                val quality = prefs.getString(PreferenceKeys.QualityPreferenceKey, "90") ?: "90"
                 Setting(
                     title = stringResource(R.string.shashinki_quality),
                     value = stringResource(R.string.shashinki_quality_value, quality),
@@ -124,7 +140,6 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 )
             }
             item {
-                val timer = prefs.getString(PreferenceKeys.TimerPreferenceKey, "0") ?: "0"
                 Setting(
                     title = stringResource(R.string.shashinki_timer),
                     value = if (timer == "0") stringResource(R.string.shashinki_off) else stringResource(R.string.shashinki_seconds, timer),
@@ -138,7 +153,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             item {
                 Toggle(
                     title = stringResource(R.string.shashinki_shutter_sound),
-                    on = prefs.getBoolean(PreferenceKeys.ShutterSoundPreferenceKey, true),
+                    on = shutterSound,
                 ) {
                     prefs.edit().putBoolean(PreferenceKeys.ShutterSoundPreferenceKey, it).apply()
                     changed()
@@ -148,7 +163,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 Toggle(
                     title = stringResource(R.string.shashinki_location),
                     note = stringResource(R.string.shashinki_location_note),
-                    on = prefs.getBoolean(PreferenceKeys.LocationPreferenceKey, false),
+                    on = location,
                 ) { on ->
                     prefs.edit().putBoolean(PreferenceKeys.LocationPreferenceKey, on).apply()
                     // Android asks once; Open Camera starts reading the position when this screen
@@ -167,7 +182,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 Toggle(
                     title = stringResource(R.string.shashinki_qr),
                     note = stringResource(R.string.shashinki_qr_note),
-                    on = prefs.getBoolean(Defaults.QR, true),
+                    on = qr,
                 ) {
                     prefs.edit().putBoolean(Defaults.QR, it).apply()
                     changed()
@@ -176,14 +191,13 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             item {
                 Toggle(
                     title = stringResource(R.string.shashinki_grid),
-                    on = prefs.getBoolean(Defaults.GRID, false),
+                    on = grid,
                 ) {
                     prefs.edit().putBoolean(Defaults.GRID, it).apply()
                     changed()
                 }
             }
             item {
-                val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
                 Setting(
                     title = stringResource(R.string.shashinki_folder),
                     value = "DCIM/$folder",
@@ -199,11 +213,13 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     when (picking) {
         Pick.PICTURE -> {
             val sizes = preview?.getSupportedPictureSizes(true).orEmpty()
-            val current = preview?.currentPictureSize
+            val current = prefs.getString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), null)
+                ?.split(' ')?.mapNotNull { it.toIntOrNull() }
+                ?: preview?.currentPictureSize?.let { listOf(it.width, it.height) }
             PickDialog(
                 title = stringResource(R.string.shashinki_picture_size),
                 options = sizes.map { sizeLabel(it.width, it.height) },
-                chosen = sizes.indexOfFirst { it.width == current?.width && it.height == current?.height },
+                chosen = sizes.indexOfFirst { listOf(it.width, it.height) == current },
                 onChoose = { i ->
                     val s = sizes[i]
                     prefs.edit().putString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), "${s.width} ${s.height}").apply()
@@ -220,7 +236,10 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             PickDialog(
                 title = stringResource(R.string.shashinki_video_size),
                 options = qualities.map { preview!!.getCamcorderProfileDescriptionShort(it) },
-                chosen = qualities.indexOf(handler?.currentVideoQuality),
+                chosen = qualities.indexOf(
+                    prefs.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), null)
+                        ?.takeIf { it in qualities } ?: handler?.currentVideoQuality,
+                ),
                 onChoose = { i ->
                     prefs.edit().putString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), qualities[i]).apply()
                     picking = null
