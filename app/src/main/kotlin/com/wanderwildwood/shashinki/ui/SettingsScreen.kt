@@ -251,10 +251,15 @@ private val TIMERS = listOf("0", "3", "5", "10")
 private const val LOCATION_REQUEST = 7301
 
 /** "3264 × 2448 · 8 MP", the shape Open Camera's own list uses, said plainly. Under one
- *  megapixel it keeps a decimal, so a small size does not read as nothing at all. */
+ *  megapixel it keeps a decimal, and under a tenth two, so a small size does not read as
+ *  nothing at all ("176 × 144 · 0.03 MP", not "0.0"). */
 private fun sizeLabel(w: Int, h: Int): String {
     val pixels = w.toLong() * h
-    val mp = if (pixels < 1_000_000) "%.1f".format(pixels / 1_000_000.0) else ((pixels + 500_000) / 1_000_000).toString()
+    val mp = when {
+        pixels < 100_000 -> "%.2f".format(pixels / 1_000_000.0)
+        pixels < 1_000_000 -> "%.1f".format(pixels / 1_000_000.0)
+        else -> ((pixels + 500_000) / 1_000_000).toString()
+    }
     return "$w × $h · $mp MP"
 }
 

@@ -330,15 +330,17 @@ private fun Camera(activity: MainActivity) {
     val shot = CameraLayer.snapshot
 
     if (settingsOpen) {
-        BackHandler { settingsOpen = false }
+        // Back and the close button leave the same way: Open Camera rereads everything and
+        // reopens the camera if it has to, as it does when its own settings close. Left by Back
+        // alone, a new picture size waited for the app's next start.
+        val close = {
+            settingsOpen = false
+            activity.updateForSettings(true)
+            CameraLayer.refresh()
+        }
+        BackHandler(onBack = close)
         Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
-            SettingsScreen(activity, onClose = {
-                settingsOpen = false
-                // Open Camera rereads everything and reopens the camera if it has to, as it
-                // does when its own settings close.
-                activity.updateForSettings(true)
-                CameraLayer.refresh()
-            })
+            SettingsScreen(activity, onClose = close)
         }
         return
     }
