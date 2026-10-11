@@ -656,9 +656,8 @@
         android:id="@+id/popup_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fadeScrollbars="false"
         android:scrollbarThumbVertical="@color/scrollview"
-        />
+        android:scrollbars="none"/>
     
     <ScrollView
         android:id="@+id/hide_container"
@@ -667,7 +666,7 @@
         android:background="@android:color/black"
         android:visibility="gone"
         android:importantForAccessibility="no"
-        />
+        android:scrollbars="none"/>
     </RelativeLayout>
 
 </RelativeLayout>

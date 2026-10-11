@@ -5,6 +5,9 @@
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
     <style name="AppBaseTheme" parent="@style/Theme.AppCompat.NoActionBar">
+        <!-- No scrollbars: a list moves a page to a swipe, and nothing else needs one. -->
+        <item name="android:scrollbarThumbVertical">@android:color/transparent</item>
+        <item name="android:scrollbarThumbHorizontal">@android:color/transparent</item>
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to

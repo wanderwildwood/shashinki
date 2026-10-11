@@ -99,7 +99,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
         val qr = prefs.getBoolean(Defaults.QR, true)
         val grid = prefs.getBoolean(Defaults.GRID, false)
         val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
-        LazyColumnMMD(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
+        LazyColumnMMD(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), isScrollbarVisible = false) {
             item { Spacer(Modifier.height(8.dp)) }
 
             item {
@@ -319,7 +319,7 @@ private fun PickDialog(title: String, options: List<String>, chosen: Int, onChoo
     EInkDialog(onDismiss = onDismiss) {
         TextMMD(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
-        LazyColumnMMD(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+        LazyColumnMMD(modifier = Modifier.fillMaxWidth().height(300.dp), isScrollbarVisible = false) {
             items(options.size) { i ->
                 TextMMD(
                     text = if (i == chosen) stringResource(R.string.shashinki_in_use, options[i]) else options[i],
