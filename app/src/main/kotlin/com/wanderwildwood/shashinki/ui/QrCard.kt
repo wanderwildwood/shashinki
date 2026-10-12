@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.app.SearchManager
 import android.net.Uri
 import android.net.wifi.WifiNetworkSuggestion
 import android.provider.ContactsContract
@@ -49,7 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.Result
+import com.google.zxing.client.result.ISBNParsedResult
+import com.google.zxing.client.result.ProductParsedResult
+import com.google.zxing.client.result.ResultParser
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.google.zxing.client.result.AddressBookParsedResult
 import com.google.zxing.client.result.EmailAddressParsedResult
@@ -88,7 +93,12 @@ data class Found(
     val intent: Intent?,
     /** Bound for Passwords: a secret, so not offered to Wallet as well. */
     val signIn: Boolean = false,
+    /** The kind of code it was read from, so it is drawn again as the same kind. */
+    val format: BarcodeFormat = BarcodeFormat.QR_CODE,
 )
+
+internal fun describe(context: Context, result: Result): Found =
+    describe(context, ResultParser.parseResult(result)).copy(format = result.barcodeFormat)
 
 internal fun describe(context: Context, parsed: ParsedResult): Found {
     val raw = parsed.displayResult.orEmpty()
@@ -160,8 +170,19 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
             raw, R.string.qr_kind_place, "%.5f, %.5f".format(parsed.latitude, parsed.longitude), R.string.qr_show,
             ifAnyone(Intent(Intent.ACTION_VIEW, Uri.parse(parsed.geoURI))),
         )
+        // A shop barcode or a book's: the number means nothing read out, so it is looked up.
+        is ProductParsedResult -> Found(raw, R.string.qr_kind_product, parsed.normalizedProductID, R.string.qr_look_up, lookUp(context, parsed.normalizedProductID))
+        is ISBNParsedResult -> Found(raw, R.string.qr_kind_book, parsed.isbn, R.string.qr_look_up, lookUp(context, "ISBN " + parsed.isbn))
         else -> Found(raw, R.string.qr_kind_text_plain, raw, null, null)
     }
+}
+
+/** A web search for [words]: the browser's own if it takes one, otherwise DuckDuckGo in it. */
+private fun lookUp(context: Context, words: String): Intent? {
+    val search = Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, words)
+    if (search.resolveActivity(context.packageManager) != null) return search
+    val view = Intent(Intent.ACTION_VIEW, Uri.parse("https://duckduckgo.com/?q=" + Uri.encode(words)))
+    return view.takeIf { it.resolveActivity(context.packageManager) != null }
 }
 
 /**
@@ -184,44 +205,79 @@ private fun signIn(context: Context, text: String): Found {
 }
 
 /**
- * Looks at the viewfinder a few times a second while [enabled], and reports a code when it
- * sees one; there is no photo to take first. The frame is taken small — enough to read a code,
- * a fraction of the work of the full picture — and read off the main thread. A code seen but
- * not yet readable, or too small in the picture to be what the camera is pointed at, is focused
- * on, as a tap on it would. A read gives one short haptic tick. Never while a video records.
+ * Looks at the viewfinder while [enabled], and reports a code when it sees one; there is no
+ * photo to take first. Frames come from the camera's own grey copy ([CodeFrames]), one as soon
+ * as the last is read, at the camera's sharpness; where the camera gives no copy (RAW on, a
+ * vendor mode) the picture on screen is read a few times a second instead. A code seen but not
+ * yet readable, or too small in the picture to be what the camera is pointed at, is focused on
+ * as a tap on it would be, and [onSpotted] says so, to bring up the square to aim with. A read
+ * gives one short haptic tick. Never while a video records.
+ *
+ * [formats] and [anywhere]: what another app asked for, when it asked for a scan.
  */
 @Composable
-internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) -> Unit) {
+internal fun QrWatch(
+    activity: MainActivity,
+    enabled: Boolean,
+    formats: List<BarcodeFormat> = QrReader.ALL,
+    anywhere: Boolean = false,
+    onSpotted: () -> Unit = {},
+    onFound: (Found, Result) -> Unit,
+) {
     val report by rememberUpdatedState(onFound)
+    val spotted by rememberUpdatedState(onSpotted)
     // Only while the camera is in front and running. Another screen over it — Android's own
     // "save this network?" — pauses the activity and Open Camera lets the camera go and takes it
     // back; reading frames off the view through that is how the viewfinder came back frozen.
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val resumed by lifecycle.currentStateFlow.collectAsState()
-    LaunchedEffect(enabled, resumed.isAtLeast(Lifecycle.State.RESUMED)) {
+    LaunchedEffect(enabled, resumed.isAtLeast(Lifecycle.State.RESUMED), formats, anywhere) {
         if (!enabled || !resumed.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
         var focusedAt = 0L
+        var screenUntil = 0L
         while (isActive) {
-            delay(INTERVAL_MS)
-            val preview = activity.preview ?: continue
-            if (!preview.isPreviewStarted || preview.isOpeningCamera || preview.isTakingPhotoOrOnTimer || preview.isVideoRecording) continue
-            val view = preview.view as? TextureView ?: continue
-            if (!view.isAvailable || view.width == 0) continue
-            val frame = view.getBitmap(FRAME_WIDTH, FRAME_WIDTH * view.height / view.width) ?: continue
-            val scale = view.width.toFloat() / frame.width
-            val seen = withContext(Dispatchers.Default) {
-                try { QrReader.read(frame) } finally { frame.recycle() }
+            val preview = activity.preview
+            val view = preview?.view as? TextureView
+            if (preview == null || view == null || !preview.isPreviewStarted || preview.isOpeningCamera ||
+                preview.isTakingPhotoOrOnTimer || preview.isVideoRecording || !view.isAvailable || view.width == 0
+            ) {
+                delay(INTERVAL_MS)
+                continue
+            }
+            // The camera's copy, if this session has one; else the screen's, more slowly.
+            val frame = if (System.currentTimeMillis() < screenUntil) null else CodeFrames.next(FRAME_WAIT_MS)
+            if (frame == null && System.currentTimeMillis() >= screenUntil) screenUntil = System.currentTimeMillis() + SCREEN_FOR_MS
+            val seen: QrReader.Seen?
+            val scaleX: Float
+            val scaleY: Float
+            var mirror = false
+            if (frame != null) {
+                seen = withContext(Dispatchers.Default) { QrReader.read(frame, formats, anywhere) }
+                scaleX = view.width.toFloat() / frame.width
+                scaleY = view.height.toFloat() / frame.height
+                mirror = frame.front
+                delay(GAP_MS)
+            } else {
+                delay(INTERVAL_MS)
+                val shot = view.getBitmap(FRAME_WIDTH, FRAME_WIDTH * view.height / view.width) ?: continue
+                scaleX = view.width.toFloat() / shot.width
+                scaleY = scaleX
+                seen = withContext(Dispatchers.Default) {
+                    try { QrReader.read(shot) } finally { shot.recycle() }
+                }
             }
             when (seen) {
                 is QrReader.Seen.Code -> {
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                    report(describe(activity, seen.parsed))
+                    report(describe(activity, seen.result), seen.result)
                 }
                 is QrReader.Seen.Place -> {
+                    spotted()
                     val now = System.currentTimeMillis()
                     if (now - focusedAt > FOCUS_EVERY_MS) {
                         focusedAt = now
-                        preview.focusAt(seen.x * scale, seen.y * scale)
+                        val x = seen.x * scaleX
+                        preview.focusAt(if (mirror) view.width - x else x, seen.y * scaleY)
                     }
                 }
                 null -> Unit
@@ -243,7 +299,7 @@ internal fun QrWatch(activity: MainActivity, enabled: Boolean, onFound: (Found) 
 @Composable
 internal fun QrScreen(found: Found, onClose: () -> Unit) {
     val context = LocalContext.current
-    val drawn = remember(found.raw) { draw(found.raw) }
+    val drawn = remember(found.raw) { draw(found.raw, found.format) }
     val wallet = remember(found.raw) { if (found.signIn) null else walletIntent(context) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
@@ -326,17 +382,20 @@ private fun Choice(label: String, onClick: () -> Unit) {
 }
 
 /**
- * The code drawn again from its text, one pixel a module plus the four-module quiet zone a
- * reader needs; the screen scales it up without smoothing. Null for text too long to encode.
+ * The code drawn again from its text as the kind it was read from, one pixel a module plus the
+ * quiet zone a reader needs; the screen scales it up without smoothing. A barcode's one row is
+ * stood a third as tall as it is wide. Null for text too long to encode, or a kind ZXing cannot
+ * draw — then the text alone is shown.
  */
-internal fun draw(raw: String): Bitmap? = try {
-    val matrix = QRCodeWriter().encode(
-        raw, BarcodeFormat.QR_CODE, 0, 0,
-        mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M, EncodeHintType.MARGIN to 4),
-    )
+internal fun draw(raw: String, format: BarcodeFormat = BarcodeFormat.QR_CODE): Bitmap? = try {
+    val hints = buildMap<EncodeHintType, Any> {
+        put(EncodeHintType.MARGIN, if (format in QrReader.BARS) 10 else 4)
+        if (format == BarcodeFormat.QR_CODE) put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M)
+    }
+    val matrix = MultiFormatWriter().encode(raw, format, 0, 0, hints)
     val w = matrix.width
-    val h = matrix.height
-    val pixels = IntArray(w * h) { i -> if (matrix.get(i % w, i / w)) Color.BLACK else Color.WHITE }
+    val h = if (format in QrReader.BARS) maxOf(1, w / 3) else matrix.height
+    val pixels = IntArray(w * h) { i -> if (matrix.get(i % w, if (format in QrReader.BARS) 0 else i / w)) Color.BLACK else Color.WHITE }
     Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
 } catch (e: Exception) {
     null
@@ -365,8 +424,14 @@ private fun keep(context: Context, drawn: Bitmap): Uri {
     return FileProvider.getUriForFile(context, context.packageName + ".qr", file)
 }
 
-/** About three frames a second: quick to notice a code, light on the viewfinder and battery. */
+/** Off the screen, about three frames a second: quick to notice a code, light on the battery. */
 private const val INTERVAL_MS = 330L
+/** Between the camera's frames: as fast as they read, with a breath for the rest of the phone. */
+private const val GAP_MS = 60L
+/** How long to wait for the camera's copy before reading the screen instead. */
+private const val FRAME_WAIT_MS = 600L
+/** Once the camera gave no copy, the screen is read this long before the camera is asked again. */
+private const val SCREEN_FOR_MS = 5_000L
 /** How often a code not yet readable is focused on again. */
 private const val FOCUS_EVERY_MS = 2000L
 private const val FRAME_WIDTH = 480

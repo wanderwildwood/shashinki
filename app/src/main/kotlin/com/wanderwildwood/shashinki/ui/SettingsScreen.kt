@@ -185,6 +185,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     on = qr,
                 ) {
                     prefs.edit().putBoolean(Defaults.QR, it).apply()
+                    if (it) CodeFrames.start() else CodeFrames.stop()
                     changed()
                 }
             }

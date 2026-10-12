@@ -49,8 +49,8 @@
     <string name="shashinki_location">Where a photo was taken</string>
     <string name="shashinki_location_note">Written into each photo. Anyone you send it to can read it.</string>
     <string name="shashinki_grid">Grid</string>
-    <string name="shashinki_qr">Read QR codes</string>
-    <string name="shashinki_qr_note">A code in the viewfinder is shown on its own, with the app it belongs to and Wallet to keep it. Nothing opens until you press.</string>
+    <string name="shashinki_qr">Read codes</string>
+    <string name="shashinki_qr_note">A QR code in the viewfinder, or a barcode in the square, is shown on its own, with the app it belongs to and Wallet to keep it. Nothing opens until you press.</string>
 
     <!-- QR card: the kind of thing a code holds -->
     <string name="qr_kind_web">Web address</string>
@@ -63,6 +63,8 @@
     <string name="qr_kind_phone">Phone number</string>
     <string name="qr_kind_place">Place</string>
     <string name="qr_kind_text_plain">Text</string>
+    <string name="qr_kind_product">Product barcode</string>
+    <string name="qr_kind_book">Book (ISBN)</string>
     <!-- QR card buttons (verbs) -->
     <string name="qr_open">Open</string>
     <string name="qr_join">Join</string>
@@ -70,7 +72,12 @@
     <string name="qr_write">Write</string>
     <string name="qr_call">Dial</string>
     <string name="qr_show">Show on a map</string>
+    <string name="qr_look_up">Look up</string>
     <string name="qr_copy">Copy</string>
+    <string name="qr_read_code">Read code</string>
+    <string name="qr_reading">Reading the picture…</string>
+    <string name="qr_none_in_picture">No code was found in this picture.</string>
+    <string name="qr_picture_unopened">The picture could not be opened.</string>
     <string name="qr_copied">Copied</string>
     <string name="qr_save_wallet">Save to Wallet</string>
     <string name="qr_add_passwords">Add to Passwords</string>

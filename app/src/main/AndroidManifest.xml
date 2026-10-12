@@ -66,6 +66,24 @@
                 <action android:name="android.media.action.VIDEO_CAPTURE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- shashinki: another app asking for a code to be scanned and handed back -->
+            <intent-filter>
+                <action android:name="com.google.zxing.client.android.SCAN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <!-- shashinki: "Read code" in the share sheet, for a picture with a code in it -->
+        <activity
+            android:name="com.wanderwildwood.shashinki.ui.ReadCodeActivity"
+            android:label="@string/qr_read_code"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Shashinki.Code"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
         </activity>
         <!-- shashinki: upstream's Bluetooth remote, home-screen widget and quick-settings
              tiles are left out. Their code is still in the tree, untouched, but nothing starts it. -->
@@ -116,6 +134,9 @@
         <intent>
             <action android:name="android.intent.action.SENDTO" />
             <data android:scheme="smsto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.WEB_SEARCH" />
         </intent>
         <intent>
             <action android:name="android.intent.action.DIAL" />

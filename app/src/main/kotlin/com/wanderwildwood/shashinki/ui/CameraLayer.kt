@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
@@ -54,6 +57,7 @@ import net.sourceforge.opencamera.MyApplicationInterface
 import net.sourceforge.opencamera.PreferenceKeys
 import net.sourceforge.opencamera.R
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.delay
 
 /**
  * This app's whole interface: a Compose layer laid over Open Camera's own activity.
@@ -147,6 +151,15 @@ object CameraLayer {
             trouble = message
             capturing = false
         }
+    }
+
+    /**
+     * Called by MainActivity as it resumes, before the camera opens: the camera is asked for a
+     * copy of its frames for the code reader while reading codes is on or a scan was asked for.
+     */
+    @JvmStatic
+    fun resume(activity: MainActivity) {
+        if (Defaults.qr(activity) || ScanRequest.asked(activity.intent)) CodeFrames.start() else CodeFrames.stop()
     }
 
     /** Called when the camera has (re)opened: any earlier trouble is over. */
@@ -353,7 +366,29 @@ private fun Camera(activity: MainActivity) {
     // is not offered again while it is still in front of the lens.
     var found by remember { mutableStateOf<Found?>(null) }
     var closed by remember { mutableStateOf<Pair<String, Long>?>(null) }
-    QrWatch(activity, enabled = found == null && !shot.video && !shot.failed && Defaults.qr(activity)) { f ->
+    // Another app asked for a scan: the square stays up, and the code goes straight back.
+    val scan = remember(activity.intent) { ScanRequest.asked(activity.intent) }
+    val formats = remember(activity.intent) { ScanRequest.formats(activity.intent) }
+    // The square to aim with comes up once a code is seen, and goes a while after it is not.
+    var spottedAt by remember { mutableStateOf(0L) }
+    var aiming by remember { mutableStateOf(false) }
+    LaunchedEffect(spottedAt) {
+        if (spottedAt == 0L) return@LaunchedEffect
+        aiming = true
+        delay(AIM_SHOWN_MS)
+        aiming = false
+    }
+    QrWatch(
+        activity,
+        enabled = found == null && !shot.video && !shot.failed && (scan || Defaults.qr(activity)),
+        formats = if (scan) formats else QrReader.ALL,
+        anywhere = scan,
+        onSpotted = { if (!aiming || System.currentTimeMillis() - spottedAt > AIM_SHOWN_MS / 2) spottedAt = System.currentTimeMillis() },
+    ) { f, result ->
+        if (scan) {
+            ScanRequest.answer(activity, result)
+            return@QrWatch
+        }
         val (raw, at) = closed ?: ("" to 0L)
         if (f.raw != raw || System.currentTimeMillis() - at > QR_QUIET_MS) found = f
     }
@@ -372,6 +407,16 @@ private fun Camera(activity: MainActivity) {
         // picture still reaches Open Camera's preview, which focuses where it was tapped.
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (Defaults.grid(activity)) Grid()
+            if ((scan || aiming) && !shot.video) Aim(activity)
+            if (scan) ScanRequest.prompt(activity.intent)?.let { prompt ->
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                ) {
+                    TextMMD(text = prompt, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                }
+            }
             if (CameraLayer.blinking) {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
             }
@@ -585,6 +630,49 @@ private fun Grid() {
         }
     }
 }
+
+/**
+ * The square a code is read in, over the middle of the picture: corners only, black edged in
+ * white so they show over anything. The same square [QrReader] reads first.
+ */
+@Composable
+private fun Aim(activity: MainActivity) {
+    val view = activity.preview?.view
+    // Over the picture itself, which need not sit in the middle of this box.
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    Canvas(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInWindow() }) {
+        var cx = size.width / 2
+        var cy = size.height / 2
+        var w = size.width
+        var h = size.height
+        if (view != null && view.width > 0 && view.height > 0) {
+            val at = IntArray(2).also { view.getLocationInWindow(it) }
+            cx = at[0] - origin.x + view.width / 2f
+            cy = at[1] - origin.y + view.height / 2f
+            w = view.width.toFloat()
+            h = view.height.toFloat()
+        }
+        val side = QrReader.aim(w.toInt(), h.toInt()).toFloat()
+        val left = cx - side / 2
+        val top = cy - side / 2
+        val arm = side / 6
+        val corners = listOf(
+            Offset(left, top) to Offset(1f, 1f),
+            Offset(left + side, top) to Offset(-1f, 1f),
+            Offset(left, top + side) to Offset(1f, -1f),
+            Offset(left + side, top + side) to Offset(-1f, -1f),
+        )
+        for ((width, ink) in listOf(14f to Color.White, 8f to Color.Black)) {
+            for ((c, d) in corners) {
+                drawLine(ink, c, Offset(c.x + d.x * arm, c.y), strokeWidth = width)
+                drawLine(ink, c, Offset(c.x, c.y + d.y * arm), strokeWidth = width)
+            }
+        }
+    }
+}
+
+/** How long the square stays up after a code was last seen. */
+private const val AIM_SHOWN_MS = 3_000L
 
 /** How long a closed code stays closed while it is still in the frame. */
 private const val QR_QUIET_MS = 8_000L

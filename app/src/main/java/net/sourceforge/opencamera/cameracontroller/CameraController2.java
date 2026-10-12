@@ -268,6 +268,19 @@ public class CameraController2 extends CameraController {
     private List<int[]> ae_fps_ranges;
     private List<int[]> hs_fps_ranges;
     //private ImageReader previewImageReader;
+    /** shashinki: a small copy of the preview for the code reader, when it asks for one. */
+    private ImageReader codeReader;
+    private Surface codeSurface;
+
+    /**
+     * shashinki: where frames for the code reader go. Set while the reader wants them; read when
+     * a capture session is made, so a change takes effect on the next one.
+     */
+    public interface CodeFrameSink {
+        /** Called on the camera's background thread; [image] is closed once this returns. */
+        void onFrame(android.media.Image image, int sensorOrientation, boolean front);
+    }
+    public static volatile CodeFrameSink codeFrameSink;
     private SurfaceTexture texture;
     private Surface surface_texture;
     private HandlerThread thread;
@@ -1471,6 +1484,7 @@ public class CameraController2 extends CameraController {
                 Log.d(TAG, "close camera complete: " + camera_to_close);
         }
         closePictureImageReader();
+        closeCodeReader();
         /*if( previewImageReader != null ) {
             previewImageReader.close();
             previewImageReader = null;
@@ -1567,6 +1581,79 @@ public class CameraController2 extends CameraController {
                 Log.d(TAG, "out point[" + i + "]: " + point.first + " , " + point.second);*/
         }
         return out_values;
+    }
+
+    /**
+     * shashinki: the copy of the preview the code reader reads, made only for a plain photo
+     * session (no RAW, no vendor extension, no video) and only while the reader wants frames.
+     * Grey-scale is all a code needs, so YUV, at about 1280 wide: sharper than the viewfinder
+     * on this panel, and within the preview-plus-YUV-plus-JPEG streams every camera supports.
+     */
+    private Surface openCodeReader() {
+        final CodeFrameSink sink = codeFrameSink;
+        if( sink == null || sessionType != SessionType.SESSIONTYPE_NORMAL || characteristics == null || preview_width == 0 || preview_height == 0 )
+            return null;
+        try {
+            android.hardware.camera2.params.StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            android.util.Size[] sizes = map == null ? null : map.getOutputSizes(ImageFormat.YUV_420_888);
+            if( sizes == null || sizes.length == 0 )
+                return null;
+            double aspect = preview_width / (double)preview_height;
+            android.util.Size best = null;
+            for(android.util.Size size : sizes) {
+                if( size.getWidth() > 1280 || size.getWidth() < 640 )
+                    continue;
+                if( Math.abs(size.getWidth() / (double)size.getHeight() - aspect) > 0.01 )
+                    continue;
+                if( best == null || size.getWidth() > best.getWidth() )
+                    best = size;
+            }
+            if( best == null )
+                return null;
+            final boolean front = getFacing() == Facing.FACING_FRONT;
+            final int orientation = characteristics_sensor_orientation;
+            codeReader = ImageReader.newInstance(best.getWidth(), best.getHeight(), ImageFormat.YUV_420_888, 2);
+            codeReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    android.media.Image image;
+                    try {
+                        image = reader.acquireLatestImage();
+                    }
+                    catch(IllegalStateException e) {
+                        return;
+                    }
+                    if( image == null )
+                        return;
+                    try {
+                        CodeFrameSink now = codeFrameSink;
+                        if( now != null )
+                            now.onFrame(image, orientation, front);
+                    }
+                    catch(RuntimeException e) {
+                        Log.e(TAG, "code frame", e);
+                    }
+                    finally {
+                        image.close();
+                    }
+                }
+            }, handler);
+            codeSurface = codeReader.getSurface();
+            return codeSurface;
+        }
+        catch(RuntimeException e) {
+            Log.e(TAG, "no code reader", e);
+            closeCodeReader();
+            return null;
+        }
+    }
+
+    private void closeCodeReader() {
+        if( codeReader != null ) {
+            codeReader.close();
+            codeReader = null;
+        }
+        codeSurface = null;
     }
 
     private void closePictureImageReader() {
@@ -5450,6 +5537,8 @@ public class CameraController2 extends CameraController {
                         captureSession = session;
                         extensionSession = eSession;
                         previewBuilder.addTarget(surface_texture);
+                        if( codeSurface != null )
+                            previewBuilder.addTarget(codeSurface);
                         if( video_recorder != null ) {
                             if( MyDebug.LOG ) {
                                 Log.d(TAG, "add video recorder surface to previewBuilder: " + video_recorder_surface);
@@ -5556,6 +5645,10 @@ public class CameraController2 extends CameraController {
             Surface preview_surface;
             List<Surface> surfaces;
             synchronized( background_camera_lock ) {
+                // shashinki: the code reader's copy belongs to one session; the next one makes its own.
+                if( codeSurface != null && previewBuilder != null )
+                    previewBuilder.removeTarget(codeSurface);
+                closeCodeReader();
                 preview_surface = getPreviewSurface();
                 if( video_recorder != null ) {
                     if( supports_photo_video_recording && !want_video_high_speed && want_photo_video_recording ) {
@@ -5575,7 +5668,11 @@ public class CameraController2 extends CameraController {
                     surfaces = Arrays.asList(preview_surface, imageReader.getSurface(), imageReaderRaw.getSurface());
                 }
                 else {
-                    surfaces = Arrays.asList(preview_surface, imageReader.getSurface());
+                    Surface code = openCodeReader();
+                    if( code != null )
+                        surfaces = Arrays.asList(preview_surface, imageReader.getSurface(), code);
+                    else
+                        surfaces = Arrays.asList(preview_surface, imageReader.getSurface());
                 }
                 if( MyDebug.LOG ) {
                     Log.d(TAG, "texture: " + texture);

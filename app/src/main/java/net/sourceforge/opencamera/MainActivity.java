@@ -1309,6 +1309,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         }
         super.onResume();
         this.app_is_paused = false; // must be set before initLocation() at least
+        com.wanderwildwood.shashinki.ui.CameraLayer.resume(this); // shashinki: frames for the code reader, before the camera opens
 
         // this is intentionally true, not false, as the uncovering happens in DrawPreview when we receive frames from the camera after it's opened
         // (this should already have been set from the call in onPause(), but we set it here again just in case)
