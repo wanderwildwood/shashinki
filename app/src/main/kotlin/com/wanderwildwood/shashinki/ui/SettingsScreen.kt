@@ -34,7 +34,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
-import com.mudita.mmd.components.lazy.LazyColumnMMD
 import com.mudita.mmd.components.switcher.SwitchMMD
 import com.mudita.mmd.components.text.TextMMD
 import com.mudita.mmd.components.text_field.TextFieldMMD
@@ -99,7 +98,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
         val qr = prefs.getBoolean(Defaults.QR, true)
         val grid = prefs.getBoolean(Defaults.GRID, false)
         val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
-        LazyColumnMMD(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), isScrollbarVisible = false) {
+        PagedColumn(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
             item { Spacer(Modifier.height(8.dp)) }
 
             item {
@@ -205,7 +204,6 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     onClick = { folderOpen = true },
                 )
             }
-            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 
@@ -320,7 +318,7 @@ private fun PickDialog(title: String, options: List<String>, chosen: Int, onChoo
     EInkDialog(onDismiss = onDismiss) {
         TextMMD(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
-        LazyColumnMMD(modifier = Modifier.fillMaxWidth().height(300.dp), isScrollbarVisible = false) {
+        PagedColumn(modifier = Modifier.fillMaxWidth().height(300.dp)) {
             items(options.size) { i ->
                 TextMMD(
                     text = if (i == chosen) stringResource(R.string.shashinki_in_use, options[i]) else options[i],
