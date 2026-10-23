@@ -110,6 +110,17 @@ License 2.0. Codes are read by [ZXing](https://github.com/zxing/zxing), Apache L
 reading them — the middle square at the camera's own sharpness, frame after frame — follows
 [QR & Barcode Scanner](https://github.com/wewewe718/QrAndBarcodeScanner) by wewewe718 (The Unlicense).
 
+## Getting it, and keeping it
+
+Download <https://github.com/wanderwildwood/shashinki/releases/latest/download/shashinki.apk>
+and sideload it. That address always points at the newest release, and every release
+publishes a `.sha256` beside the APK if you would rather check than trust.
+
+For updates without doing this by hand, add this repository to
+[Obtainium](https://github.com/ImranR98/Obtainium):
+
+    https://github.com/wanderwildwood/shashinki
+
 ## Licence
 
 GNU General Public License v3 or later, as Open Camera is. See [LICENSE](LICENSE).
