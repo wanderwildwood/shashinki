@@ -28,9 +28,11 @@ feature is not offered here, and the permissions are taken out of the manifest.
 
 ## Where things go
 
-Photos and videos are saved through Android's media store to `DCIM/OpenCamera` (or the folder
-chosen in settings), where any gallery on the phone can see them. Nothing else is written
-except the settings, in the app's own preferences.
+Photos and videos are saved through Android's media store to `DCIM/Camera` (or the folder
+chosen in settings), where any gallery on the phone can see them. When you press Save to Wallet
+on a code the camera has read, the code is drawn as a picture and kept in the app's own cache
+(one file, replaced by the next); it is handed only to Wallet. Nothing else is written except the
+settings, in the app's own preferences.
 
 ## No analytics
 

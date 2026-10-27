@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,6 +17,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,35 +36,54 @@ import net.sourceforge.opencamera.R
  */
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
     EInkDialog(onDismiss = onDismiss) {
         TextMMD(
             text = stringResource(R.string.shashinki_about_title, BuildConfig.VERSION_NAME),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium,
         )
+        Spacer(Modifier.height(10.dp))
 
-        Spacer(Modifier.height(14.dp))
-        TextMMD(
-            text = stringResource(R.string.shashinki_about_privacy),
-            style = MaterialTheme.typography.labelSmall,
-        )
+        // Paged on whole paragraphs: the text outgrows the panel, and the Close button below stays put.
+        PagedColumn(modifier = Modifier.fillMaxWidth().height(380.dp)) {
+            // A heading stays with its paragraph: one row each, so a page never ends on a heading.
+            item {
+                Column {
+                    Heading(stringResource(R.string.shashinki_about_privacy_title))
+                    Body(stringResource(R.string.shashinki_about_privacy))
+                }
+            }
+            item {
+                Column {
+                    Heading(stringResource(R.string.shashinki_about_terms_title))
+                    Body(stringResource(R.string.shashinki_about_terms))
+                }
+            }
+            item {
+                Column {
+                    Body(stringResource(R.string.shashinki_about_after))
+                    Body(stringResource(R.string.shashinki_about_icons))
+                    Body(stringResource(R.string.shashinki_about_zxing))
+                }
+            }
+            item {
+                // The source, as the licence asks of anyone who hands the program on.
+                Body(
+                    stringResource(R.string.shashinki_about_source),
+                    Modifier.clickable {
+                        runCatching {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE)))
+                        }.onFailure {
+                            Toast.makeText(context, context.getString(R.string.shashinki_about_no_browser), Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                )
+            }
+            item { Llama() }
+        }
 
-
-        Spacer(Modifier.height(14.dp))
-        TextMMD(
-            text = stringResource(R.string.shashinki_about_after),
-            style = MaterialTheme.typography.labelSmall,
-        )
-
-        Spacer(Modifier.height(14.dp))
-        TextMMD(text = stringResource(R.string.shashinki_about_licence), style = MaterialTheme.typography.labelSmall)
-        TextMMD(text = stringResource(R.string.shashinki_about_icons), style = MaterialTheme.typography.labelSmall)
-        TextMMD(text = stringResource(R.string.shashinki_about_zxing), style = MaterialTheme.typography.labelSmall)
-
-        Spacer(Modifier.height(14.dp))
-        Llama()
-
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
         OutlinedButtonMMD(
             onClick = onDismiss,
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -70,9 +91,20 @@ fun AboutDialog(onDismiss: () -> Unit) {
     }
 }
 
+private const val SOURCE = "https://github.com/wanderwildwood/shashinki"
+
+@Composable
+private fun Heading(text: String) {
+    TextMMD(text = text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+}
+
+@Composable
+private fun Body(text: String, modifier: Modifier = Modifier) {
+    TextMMD(text = text, style = MaterialTheme.typography.bodySmall, modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).padding(vertical = 4.dp))
+}
+
 /**
  * A llama at the foot of the About, which opens the page a donation goes to.
- * The site's address sits at the start of the same line and opens the site; the llama and its words open the page.
  *
  * Three words rather than an address: a verb and an object, so what happens when you press
  * them is not a surprise even though the page is not named. The drawing is his own, and it is
@@ -88,23 +120,6 @@ private fun Llama() {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        TextMMD(
-            text = "wanderthe.dev",
-            style = MaterialTheme.typography.labelSmall,
-            // The site's address opens the site, the way the llama beside it opens its page.
-            modifier = Modifier
-                .clickable {
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://wanderthe.dev")),
-                        )
-                    }.onFailure {
-                        Toast.makeText(context, context.getString(R.string.shashinki_about_no_browser), Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .padding(vertical = 4.dp),
-        )
-        Spacer(Modifier.width(6.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -122,6 +137,7 @@ private fun Llama() {
                         Toast.makeText(context, context.getString(R.string.shashinki_about_no_browser), Toast.LENGTH_SHORT).show()
                     }
                 }
+                .heightIn(min = 48.dp)
                 .padding(vertical = 4.dp),
         ) {
             Image(
@@ -130,7 +146,7 @@ private fun Llama() {
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(6.dp))
-            TextMMD(text = stringResource(R.string.shashinki_about_feed_the_llamas), style = MaterialTheme.typography.labelSmall)
+            TextMMD(text = stringResource(R.string.shashinki_about_feed_the_llamas), style = MaterialTheme.typography.bodySmall)
         }
     }
 }

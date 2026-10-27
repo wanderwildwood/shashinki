@@ -21,11 +21,13 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   the shutter is a square and the line says so; there is no running clock.
 - **The last picture** opens in Gallery (画廊 garō), inside its folder, whenever Gallery is
   installed, even if another gallery is the phone's default; otherwise in the phone's gallery.
-- **HDR and Night**, on the same line. One press of HDR brightens the shadows of a single
-  shot, so it is as quick as a plain photo and fine handheld, with nothing to line up. A second
-  press shows HDR+, which joins three exposures so a bright sky keeps its detail; a third turns
-  HDR off. Night joins several quick frames, for less grain in the dark. All are Open Camera's
-  own. HDR+ and Night say "Hold still" while they take their frames.
+- **Shadows, HDR and Night**, on the same line. One press of Shadows brightens the dark parts
+  of a single shot (Open Camera's DRO), so it is as quick as a plain photo and fine handheld,
+  with nothing to line up. A second press shows HDR, which joins three exposures so a bright sky
+  keeps its detail; a third turns it off. Night joins several quick frames, for less grain in
+  the dark, and says how many megapixels the picture will have, since the camera only does that
+  at smaller sizes. All are Open Camera's own. HDR and Night say "Hold still" while they take
+  their frames.
 - **Flash** cycles through automatic, off and on in place, as Mudita's own camera does. On is
   a steady light, lit from the moment it is chosen, so the picture can be framed by it.
 - **Tap the viewfinder** to focus there; pinch to zoom.

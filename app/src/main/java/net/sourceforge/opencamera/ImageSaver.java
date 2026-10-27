@@ -2078,14 +2078,14 @@ public class ImageSaver extends Thread {
                         if( MyDebug.LOG )
                             Log.d(TAG, "set Exif tags from data");
                         if( picFile != null ) {
-                            ExifHandler.setExifFromData(request, data, picFile);
+                            ExifHandler.setExifFromData(request, data, picFile, bitmap.getWidth(), bitmap.getHeight());
                         }
                         else {
                             ParcelFileDescriptor parcelFileDescriptor = main_activity.getContentResolver().openFileDescriptor(saveUri, "rw");
                             try {
                                 if( parcelFileDescriptor != null ) {
                                     FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                                    ExifHandler.setExifFromData(request, data, fileDescriptor);
+                                    ExifHandler.setExifFromData(request, data, fileDescriptor, bitmap.getWidth(), bitmap.getHeight());
                                 }
                                 else {
                                     Log.e(TAG, "failed to create ParcelFileDescriptor for saveUri: " + saveUri);

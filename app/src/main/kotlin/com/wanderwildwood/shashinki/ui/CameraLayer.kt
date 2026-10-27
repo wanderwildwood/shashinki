@@ -30,6 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +48,16 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalCursorBlinkEnabled
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.text.style.TextOverflow
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -92,6 +104,15 @@ object CameraLayer {
         /** Three-shot HDR: three exposures joined, which needs the phone held still. */
         val canHdr: Boolean = false,
         val canNight: Boolean = false,
+        /**
+         * Megapixels the photo will have in Night mode, which joins a burst and so cannot use
+         * the biggest sizes; 0 when Night is not on.
+         */
+        val nightMp: Int = 0,
+        /** The camera has not been allowed, and the question has been answered no. */
+        val noPermission: Boolean = false,
+        /** Android will ask again; false once it has been refused for good. */
+        val canAsk: Boolean = true,
     )
 
     internal var snapshot by mutableStateOf(Snapshot())
@@ -160,6 +181,62 @@ object CameraLayer {
     @JvmStatic
     fun resume(activity: MainActivity) {
         if (Defaults.qr(activity) || ScanRequest.asked(activity.intent)) CodeFrames.start() else CodeFrames.stop()
+        refreshSoon()
+    }
+
+    /** What the sizes and qualities were as the camera closed; the settings list reads these. */
+    class PanelInfo(
+        val pictureSizes: List<Pair<Int, Int>>,
+        val currentPicture: Pair<Int, Int>?,
+        val videoQualities: List<String>,
+        val videoNames: Map<String, String>,
+        val currentVideo: String?,
+        val steady: Boolean,
+        /** The largest picture Night mode can take, in megapixels. */
+        val nightMaxMp: Int,
+    )
+
+    internal var panelInfo by mutableStateOf<PanelInfo?>(null)
+        private set
+
+    private fun megapixels(w: Int, h: Int) = ((w.toLong() * h + 500_000) / 1_000_000).toInt()
+
+    private fun nightMegapixels(activity: MainActivity): Int {
+        val preview = activity.preview ?: return 0
+        if (activity.applicationInterface.photoMode != MyApplicationInterface.PhotoMode.NoiseReduction || preview.isVideo) return 0
+        val size = preview.currentPictureSize ?: return 0
+        return megapixels(size.width, size.height)
+    }
+
+    /**
+     * A full-screen panel is about to cover the viewfinder: note what the settings will want to
+     * list, then close the camera. Open, it would go on drawing frames nobody can see.
+     */
+    internal fun panelOpened(activity: MainActivity) {
+        val preview = activity.preview ?: return
+        if (!activity.isCameraInBackground && preview.cameraController != null) {
+            val handler = preview.videoQualityHander
+            val qualities = handler?.supportedVideoQuality.orEmpty()
+            val sizes = preview.getSupportedPictureSizes(true).orEmpty()
+            panelInfo = PanelInfo(
+                pictureSizes = sizes.map { it.width to it.height },
+                currentPicture = preview.currentPictureSize?.let { it.width to it.height },
+                videoQualities = qualities,
+                videoNames = qualities.associateWith { preview.getCamcorderProfileDescriptionShort(it) },
+                currentVideo = handler?.currentVideoQuality,
+                steady = preview.supportsVideoStabilization(),
+                // Only worth saying when Night really is smaller than the largest picture.
+                nightMaxMp = sizes.filter { it.supports_burst }.maxOfOrNull { megapixels(it.width, it.height) }
+                    ?.takeIf { it < (sizes.maxOfOrNull { s -> megapixels(s.width, s.height) } ?: 0) } ?: 0,
+            )
+        }
+        activity.closeCameraForPanel()
+    }
+
+    /** The panel is gone: open the camera again, on whatever the panel changed. */
+    internal fun panelClosed(activity: MainActivity) {
+        activity.reopenCameraAfterPanel()
+        refresh()
     }
 
     /** Called when the camera has (re)opened: any earlier trouble is over. */
@@ -218,7 +295,11 @@ object CameraLayer {
         val layer = ComposeView(activity).apply {
             setContent {
                 ThemeMMD(colorScheme = monochrome) {
-                    Camera(activity)
+                    // A cursor that blinks repaints the panel twice a second for as long as a
+                    // text field has focus.
+                    CompositionLocalProvider(LocalCursorBlinkEnabled provides false) {
+                        Camera(activity)
+                    }
                 }
             }
         }
@@ -257,6 +338,10 @@ object CameraLayer {
             canDro = modes && activity.supportsDRO(),
             canHdr = modes && activity.supportsHDR(),
             canNight = modes && activity.supportsNoiseReduction(),
+            nightMp = nightMegapixels(activity),
+            noPermission = activity.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
+                activity.permissionHandler.cameraDenied(),
+            canAsk = activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA),
         )
     }
 
@@ -337,7 +422,7 @@ object CameraLayer {
         refresh()
     }
 
-    internal val STRIP: Dp = 44.dp
+    internal val STRIP: Dp = 48.dp
     internal val BAR: Dp = 96.dp
 }
 
@@ -347,14 +432,14 @@ private fun Camera(activity: MainActivity) {
     val shot = CameraLayer.snapshot
 
     if (settingsOpen) {
-        // Back and the close button leave the same way: Open Camera rereads everything and
-        // reopens the camera if it has to, as it does when its own settings close. Left by Back
-        // alone, a new picture size waited for the app's next start.
-        val close = {
-            settingsOpen = false
-            activity.updateForSettings(true)
-            CameraLayer.refresh()
+        // The camera is closed while this covers it, and opened again, on the settings as they
+        // now are, when it goes: Open Camera does the same when its own settings open and close.
+        // Back and the close button leave the same way.
+        DisposableEffect(Unit) {
+            CameraLayer.panelOpened(activity)
+            onDispose { CameraLayer.panelClosed(activity) }
         }
+        val close = { settingsOpen = false }
         BackHandler(onBack = close)
         Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
             SettingsScreen(activity, onClose = close)
@@ -393,6 +478,10 @@ private fun Camera(activity: MainActivity) {
         if (f.raw != raw || System.currentTimeMillis() - at > QR_QUIET_MS) found = f
     }
     found?.let { f ->
+        DisposableEffect(Unit) {
+            CameraLayer.panelOpened(activity)
+            onDispose { CameraLayer.panelClosed(activity) }
+        }
         val close = {
             closed = f.raw to System.currentTimeMillis()
             found = null
@@ -421,8 +510,43 @@ private fun Camera(activity: MainActivity) {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
             }
             val message = when {
+                shot.noPermission -> null
                 shot.failed -> R.string.shashinki_no_camera
                 else -> CameraLayer.trouble
+            }
+            if (shot.noPermission) {
+                // The camera was refused: a black viewfinder and a shutter that does nothing is
+                // all there is to see, so say what is wrong and how to put it right.
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                ) {
+                    Column(Modifier.padding(20.dp)) {
+                        TextMMD(text = stringResource(R.string.shashinki_permission_camera), style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(14.dp))
+                        OutlinedButtonMMD(
+                            onClick = {
+                                if (shot.canAsk) {
+                                    activity.permissionHandler.askForCamera()
+                                } else {
+                                    runCatching {
+                                        activity.startActivity(
+                                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", activity.packageName, null)),
+                                        )
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                        ) {
+                            TextMMD(
+                                text = stringResource(if (shot.canAsk) R.string.shashinki_allow_camera else R.string.shashinki_open_app_settings),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
             }
             if (message != null) {
                 Surface(
@@ -447,7 +571,7 @@ private fun Camera(activity: MainActivity) {
                 .fillMaxWidth()
                 .height(CameraLayer.STRIP)
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(start = 16.dp),
+                .padding(start = 11.dp),
         ) {
             Mode(stringResource(R.string.shashinki_photo), chosen = !shot.video, enabled = !shot.recording) {
                 if (shot.video) {
@@ -463,7 +587,8 @@ private fun Camera(activity: MainActivity) {
                 }
             }
             Spacer(Modifier.weight(1f))
-            if (!shot.video && !shot.recording) {
+            // Not while the timer counts down: the room is wanted for saying so on one line.
+            if (!shot.video && !shot.recording && !shot.onTimer) {
                 if (shot.canDro || shot.canHdr) {
                     // One word that says which HDR is on: plain when off, bold "HDR" for one
                     // shot, bold "HDR+" for three.
@@ -478,7 +603,8 @@ private fun Camera(activity: MainActivity) {
                     }
                 }
                 if (shot.canNight) {
-                    Mode(stringResource(R.string.shashinki_night), chosen = shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction, enabled = !CameraLayer.capturing, toggle = true) {
+                    val night = stringResource(R.string.shashinki_night)
+                    Mode(if (shot.nightMp > 0) stringResource(R.string.shashinki_night_size, night, shot.nightMp) else night, chosen = shot.mode == MyApplicationInterface.PhotoMode.NoiseReduction, enabled = !CameraLayer.capturing, toggle = true) {
                         CameraLayer.toggle(activity, MyApplicationInterface.PhotoMode.NoiseReduction)
                     }
                 }
@@ -494,11 +620,14 @@ private fun Camera(activity: MainActivity) {
                 else -> null
             }
             if (status != null) {
-                TextMMD(text = status, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                TextMMD(text = status, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 Spacer(Modifier.width(8.dp))
             }
             if (!shot.recording) {
-                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings)) { settingsOpen = true }
+                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings)) {
+                    CameraLayer.panelOpened(activity)
+                    settingsOpen = true
+                }
             }
         }
 
@@ -557,8 +686,13 @@ private fun Mode(label: String, chosen: Boolean, enabled: Boolean, toggle: Boole
         modifier = Modifier
             // Photo and video are one choice, so the chosen one has nothing to do; HDR and Night
             // are each on or off, so pressing the chosen one turns it off.
+            .heightIn(min = 48.dp)
+            .widthIn(min = 48.dp)
             .clickable(enabled = enabled && (toggle || !chosen), onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 10.dp),
+            .padding(horizontal = 5.dp)
+            .wrapContentHeight(Alignment.CenterVertically),
+        maxLines = 1,
+        softWrap = false,
     )
 }
 

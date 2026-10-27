@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,7 +63,8 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     var picking by remember { mutableStateOf<Pick?>(null) }
     var folderOpen by remember { mutableStateOf(false) }
 
-    val preview = activity.preview
+    // The camera is closed while this is open, so what it offered is what it offered as it closed.
+    val info = CameraLayer.panelInfo
     val app = activity.applicationInterface
     val cameraId = app.cameraIdPref
     val physical = app.cameraIdSPhysicalPref
@@ -86,10 +88,10 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
         val pictureSize = prefs.getString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), null)
             ?.split(' ')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }
             ?.let { (w, h) -> w to h }
-            ?: preview?.currentPictureSize?.let { it.width to it.height }
+            ?: info?.currentPicture
         val videoQuality = prefs.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), null)
-            ?.takeIf { it in preview?.videoQualityHander?.supportedVideoQuality.orEmpty() }
-            ?: preview?.videoQualityHander?.currentVideoQuality
+            ?.takeIf { it in info?.videoQualities.orEmpty() }
+            ?: info?.currentVideo
         val steady = prefs.getBoolean(PreferenceKeys.VideoStabilizationPreferenceKey, true)
         val quality = prefs.getString(PreferenceKeys.QualityPreferenceKey, "90") ?: "90"
         val timer = prefs.getString(PreferenceKeys.TimerPreferenceKey, "0") ?: "0"
@@ -105,17 +107,18 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 Setting(
                     title = stringResource(R.string.shashinki_picture_size),
                     value = pictureSize?.let { (w, h) -> sizeLabel(w, h) } ?: stringResource(R.string.shashinki_unknown),
+                    note = info?.nightMaxMp?.takeIf { it > 0 }?.let { stringResource(R.string.shashinki_night_size_note, it) },
                     onClick = { picking = Pick.PICTURE },
                 )
             }
             item {
                 Setting(
                     title = stringResource(R.string.shashinki_video_size),
-                    value = videoQuality?.let { preview.getCamcorderProfileDescriptionShort(it) } ?: stringResource(R.string.shashinki_unknown),
+                    value = videoQuality?.let { info?.videoNames?.get(it) } ?: stringResource(R.string.shashinki_unknown),
                     onClick = { picking = Pick.VIDEO },
                 )
             }
-            if (preview?.supportsVideoStabilization() == true) {
+            if (info?.steady == true) {
                 item {
                     Toggle(
                         title = stringResource(R.string.shashinki_steady_video),
@@ -184,7 +187,6 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     on = qr,
                 ) {
                     prefs.edit().putBoolean(Defaults.QR, it).apply()
-                    if (it) CodeFrames.start() else CodeFrames.stop()
                     changed()
                 }
             }
@@ -211,17 +213,17 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
 
     when (picking) {
         Pick.PICTURE -> {
-            val sizes = preview?.getSupportedPictureSizes(true).orEmpty()
+            val sizes = info?.pictureSizes.orEmpty()
             val current = prefs.getString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), null)
                 ?.split(' ')?.mapNotNull { it.toIntOrNull() }
-                ?: preview?.currentPictureSize?.let { listOf(it.width, it.height) }
+                ?: info?.currentPicture?.let { listOf(it.first, it.second) }
             PickDialog(
                 title = stringResource(R.string.shashinki_picture_size),
-                options = sizes.map { sizeLabel(it.width, it.height) },
-                chosen = sizes.indexOfFirst { listOf(it.width, it.height) == current },
+                options = sizes.map { (w, h) -> sizeLabel(w, h) },
+                chosen = sizes.indexOfFirst { listOf(it.first, it.second) == current },
                 onChoose = { i ->
                     val s = sizes[i]
-                    prefs.edit().putString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), "${s.width} ${s.height}").apply()
+                    prefs.edit().putString(PreferenceKeys.getResolutionPreferenceKey(cameraId, physical), "${s.first} ${s.second}").apply()
                     // Open Camera applies a new size on reopening; the settings closing does that.
                     picking = null
                     changed()
@@ -230,14 +232,13 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             )
         }
         Pick.VIDEO -> {
-            val handler = preview?.videoQualityHander
-            val qualities = handler?.supportedVideoQuality.orEmpty()
+            val qualities = info?.videoQualities.orEmpty()
             PickDialog(
                 title = stringResource(R.string.shashinki_video_size),
-                options = qualities.map { preview!!.getCamcorderProfileDescriptionShort(it) },
+                options = qualities.map { info?.videoNames?.get(it) ?: it },
                 chosen = qualities.indexOf(
                     prefs.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), null)
-                        ?.takeIf { it in qualities } ?: handler?.currentVideoQuality,
+                        ?.takeIf { it in qualities } ?: info?.currentVideo,
                 ),
                 onChoose = { i ->
                     prefs.edit().putString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, physical, false), qualities[i]).apply()
@@ -262,6 +263,10 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     }
 }
 
+/** A folder name only: something, with no slashes, and not "." or "..", which leave DCIM. */
+internal fun folderNameOk(name: String): Boolean =
+    name.isNotEmpty() && name.none { it == '/' || it == '\\' } && name != "." && name != ".."
+
 private enum class Pick { PICTURE, VIDEO }
 
 private val QUALITIES = listOf("85", "90", "95", "100")
@@ -282,10 +287,11 @@ private fun sizeLabel(w: Int, h: Int): String {
 }
 
 @Composable
-private fun Setting(title: String, value: String, onClick: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp)) {
+private fun Setting(title: String, value: String, note: String? = null, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(vertical = 14.dp)) {
         TextMMD(text = title, style = MaterialTheme.typography.bodyMedium)
-        TextMMD(text = value, style = MaterialTheme.typography.labelSmall)
+        TextMMD(text = value, style = MaterialTheme.typography.bodySmall)
+        if (note != null) TextMMD(text = note, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -298,7 +304,7 @@ private fun Toggle(title: String, on: Boolean, note: String? = null, onChange: (
     ) {
         Column(Modifier.weight(1f)) {
             TextMMD(text = title, style = MaterialTheme.typography.bodyMedium)
-            if (note != null) TextMMD(text = note, style = MaterialTheme.typography.labelSmall)
+            if (note != null) TextMMD(text = note, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.width(12.dp))
         SwitchMMD(checked = on, onCheckedChange = null)
@@ -323,7 +329,7 @@ private fun PickDialog(title: String, options: List<String>, chosen: Int, onChoo
                 TextMMD(
                     text = if (i == chosen) stringResource(R.string.shashinki_in_use, options[i]) else options[i],
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth().clickable { onChoose(i) }.padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onChoose(i) }.padding(vertical = 12.dp),
                 )
             }
         }
@@ -340,31 +346,45 @@ private fun FolderDialog(initial: String, onSave: (String) -> Unit, onDismiss: (
     var value by remember { mutableStateOf(TextFieldValue(initial, TextRange(initial.length))) }
     // A name only: no slashes, nothing that leaves DCIM.
     val name = value.text.trim()
-    val ok = name.isNotEmpty() && name.none { it == '/' || it == '\\' } && name != "." && name != ".."
+    val ok = folderNameOk(name)
+    // Saving a name that cannot be used says why and keeps the dialog; a greyed Save only said no.
+    var refused by remember { mutableStateOf(false) }
     val save = {
-        if (ok) onSave(name)
-        onDismiss()
+        if (ok) {
+            onSave(name)
+            onDismiss()
+        } else {
+            refused = true
+        }
     }
     EInkDialog(onDismiss = onDismiss) {
         TextMMD(text = stringResource(R.string.shashinki_folder), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(6.dp))
-        TextMMD(text = stringResource(R.string.shashinki_folder_note), style = MaterialTheme.typography.labelSmall)
+        TextMMD(text = stringResource(R.string.shashinki_folder_note), style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
         TextFieldMMD(
             value = value,
-            onValueChange = { value = it },
+            onValueChange = { value = it; refused = false },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
             keyboardActions = KeyboardActions(onDone = { save() }),
         )
+        if (refused) {
+            Spacer(Modifier.height(8.dp))
+            TextMMD(
+                text = stringResource(if (name.isEmpty()) R.string.shashinki_folder_empty else R.string.shashinki_folder_bad),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            )
+        }
         Spacer(Modifier.height(18.dp))
         Row(Modifier.fillMaxWidth()) {
             OutlinedButtonMMD(onClick = onDismiss, modifier = Modifier.weight(1f).height(48.dp)) {
                 TextMMD(text = stringResource(R.string.shashinki_cancel), style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(10.dp))
-            OutlinedButtonMMD(onClick = save, enabled = ok, modifier = Modifier.weight(1f).height(48.dp)) {
+            OutlinedButtonMMD(onClick = save, modifier = Modifier.weight(1f).height(48.dp)) {
                 TextMMD(text = stringResource(R.string.shashinki_save), style = MaterialTheme.typography.bodySmall)
             }
         }

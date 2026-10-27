@@ -871,7 +871,7 @@ public class ExifHandler extends Thread {
      *  the same string value (e.g., TAG_APERTURE replaced with TAG_F_NUMBER, but both have value "FNumber"). We use the deprecated versions
      *  to avoid complicating the code (we'd still have to read the deprecated values for older devices).
      */
-    private static void setExif(final ImageSaver.Request request, ExifInterface exif, ExifInterface exif_new) throws IOException {
+    private static void setExif(final ImageSaver.Request request, ExifInterface exif, ExifInterface exif_new, int width, int height) throws IOException {
         if( MyDebug.LOG )
             Log.d(TAG, "setExif");
 
@@ -893,13 +893,29 @@ public class ExifHandler extends Thread {
 
         modifyExif(exif_new, request.remove_device_exif, request.type == ImageSaver.Request.Type.JPEG, request.using_camera2, request.using_camera_extensions, request.current_date, request.store_location, request.location, request.store_geo_direction, request.geo_direction, request.custom_tag_artist, request.custom_tag_copyright, request.level_angle, request.pitch_angle, request.store_ypr);
 
+        // shashinki: a picture made from a bitmap (Shadows, HDR, Night) was written fresh, so its
+        // size and orientation are not in the file unless they are put there. The bitmap was
+        // turned upright before it was saved, hence "normal".
+        setSizeAndOrientation(exif_new, width, height);
+
         removeExifTags(exif_new, request); // must be last, before saving attributes
         exif_new.saveAttributes();
     }
 
+    /** Writes the pixel size and a normal orientation into the file's tags. */
+    static void setSizeAndOrientation(ExifInterface exif, int width, int height) {
+        if( width > 0 && height > 0 ) {
+            exif.setAttribute(ExifInterface.TAG_IMAGE_WIDTH, String.valueOf(width));
+            exif.setAttribute(ExifInterface.TAG_IMAGE_LENGTH, String.valueOf(height));
+            exif.setAttribute(ExifInterface.TAG_PIXEL_X_DIMENSION, String.valueOf(width));
+            exif.setAttribute(ExifInterface.TAG_PIXEL_Y_DIMENSION, String.valueOf(height));
+        }
+        exif.setAttribute(ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_NORMAL));
+    }
+
     /** Transfers exif tags from the JPEG data to the image file, and then applies any extra Exif tags according to the preferences in the request.
      */
-    static void setExifFromData(final ImageSaver.Request request, byte[] data, File to_file) throws IOException {
+    static void setExifFromData(final ImageSaver.Request request, byte[] data, File to_file, int width, int height) throws IOException {
         if( MyDebug.LOG ) {
             Log.d(TAG, "setExifFromData");
             Log.d(TAG, "to_file: " + to_file);
@@ -909,7 +925,7 @@ public class ExifHandler extends Thread {
             inputStream = new ByteArrayInputStream(data);
             ExifInterface exif = new ExifInterface(inputStream);
             ExifInterface exif_new = new ExifInterface(to_file.getAbsolutePath());
-            setExif(request, exif, exif_new);
+            setExif(request, exif, exif_new, width, height);
         }
         finally {
             if( inputStream != null ) {
@@ -920,7 +936,7 @@ public class ExifHandler extends Thread {
 
     /** Transfers exif tags from the JPEG data to the image file descriptor, and then applies any extra Exif tags according to the preferences in the request.
      */
-    static void setExifFromData(final ImageSaver.Request request, byte[] data, FileDescriptor to_file_descriptor) throws IOException {
+    static void setExifFromData(final ImageSaver.Request request, byte[] data, FileDescriptor to_file_descriptor, int width, int height) throws IOException {
         if( MyDebug.LOG ) {
             Log.d(TAG, "setExifFromData");
             Log.d(TAG, "to_file_descriptor: " + to_file_descriptor);
@@ -930,7 +946,7 @@ public class ExifHandler extends Thread {
             inputStream = new ByteArrayInputStream(data);
             ExifInterface exif = new ExifInterface(inputStream);
             ExifInterface exif_new = new ExifInterface(to_file_descriptor);
-            setExif(request, exif, exif_new);
+            setExif(request, exif, exif_new, width, height);
         }
         finally {
             if( inputStream != null ) {

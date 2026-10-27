@@ -6,13 +6,16 @@
     <!-- Main screen -->
     <string name="shashinki_photo">Photo</string>
     <string name="shashinki_video">Video</string>
-    <!-- Photo modes. One press turns on HDR from a single shot (shadows brought up, nothing to
-         line up, fine handheld); a second press is HDR+, three exposures joined so bright skies
-         keep their detail; a third turns it off -->
-    <string name="shashinki_hdr">HDR</string>
-    <string name="shashinki_hdr_plus">HDR+</string>
+    <!-- Photo modes. One press turns on Shadows (one shot with the dark parts brought up, nothing
+         to line up, fine handheld: Open Camera's "DRO"); a second press is HDR, three exposures
+         joined so bright skies keep their detail; a third turns it off -->
+    <string name="shashinki_hdr">Shadows</string>
+    <string name="shashinki_hdr_plus">HDR</string>
     <!-- Joins several quick frames into one, for less grain in the dark -->
     <string name="shashinki_night">Night</string>
+    <!-- The strip while Night is on: Night joins a burst of frames, which the camera only gives at
+         smaller sizes. %1$s is "Night", %2$d the megapixels the picture will have -->
+    <string name="shashinki_night_size">%1$s · %2$d MP</string>
     <!-- Shown beside the mode while a video is being recorded -->
     <string name="shashinki_recording">Recording</string>
     <!-- Shown while HDR+ or Night takes its frames -->
@@ -28,6 +31,13 @@
     <!-- When the camera cannot be opened. On a Kompakt the usual cause is the switch on the left side -->
     <string name="shashinki_camera_stopped">The camera stopped working. Leave the app and open it again to restart it.</string>
     <string name="shashinki_photo_failed">That photo could not be taken. Try again.</string>
+    <!-- Shown over the viewfinder when the camera was refused, with a button to put it right -->
+    <string name="shashinki_permission_camera">Camera cannot show anything until it is allowed to use the phone\'s camera.</string>
+    <string name="shashinki_allow_camera">Allow the camera</string>
+    <string name="shashinki_open_app_settings">Open the app\'s settings</string>
+    <string name="shashinki_permission_microphone">The microphone is used only while a video is recording, for its sound.</string>
+    <string name="shashinki_permission_location">Location is used only to write where a photo was taken into the photo, and only while that is turned on in settings.</string>
+    <string name="shashinki_no_sound">Without the microphone, videos are recorded with no sound.</string>
     <string name="shashinki_no_camera">The camera could not be opened. If the switch on the left side of the phone is set to turn the camera off, move it back.</string>
 
     <!-- Settings -->
@@ -36,6 +46,8 @@
     <string name="shashinki_cd_about">About</string>
     <string name="shashinki_picture_size">Picture size</string>
     <string name="shashinki_video_size">Video size</string>
+    <!-- Under Picture size. %1$d is megapixels -->
+    <string name="shashinki_night_size_note">Night mode takes smaller pictures, up to %1$d MP, whatever is chosen here.</string>
     <!-- JPEG quality. %1$s is a number from 85 to 100 -->
     <string name="shashinki_quality">Picture quality</string>
     <string name="shashinki_quality_value">%1$s of 100</string>
@@ -85,6 +97,8 @@
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_folder">Folder</string>
     <string name="shashinki_folder_note">Under DCIM on the phone. A name only.</string>
+    <string name="shashinki_folder_empty">The folder needs a name.</string>
+    <string name="shashinki_folder_bad">Not saved: a name only, with no slashes, and not . or ..</string>
     <string name="shashinki_unknown">Not known until the camera opens</string>
     <!-- Marks the size in use in a list. %1$s is the size -->
     <string name="shashinki_in_use">"%1$s  ·  in use"</string>
@@ -94,9 +108,12 @@
 
     <!-- About. Keep the names of the app, people, projects and licences as they are -->
     <string name="shashinki_about_title">Camera %1$s</string>
-    <string name="shashinki_about_privacy">It sends nothing anywhere and has no network permission. Where a photo was taken is written into it only when that is turned on in settings.</string>
-    <string name="shashinki_about_after">Open Camera by Mark Harman, GPL 3.0 or later, is the camera itself: everything here but its face.</string>
-    <string name="shashinki_about_licence">GNU General Public License v3 or later</string>
+    <string name="shashinki_about_privacy_title">Privacy</string>
+    <string name="shashinki_about_privacy">Everything you photograph or record stays on this phone. The app has no internet access, so nothing is sent anywhere, and nothing is collected about you. It uses the camera to take pictures, the microphone only while a video is recording, and the phone\'s location only if you turn on \"Where a photo was taken\", when the place is written into each photo. Pictures and videos are saved under DCIM, where other apps on the phone can read them. A code you read is handed to another app only when you press its button; the picture kept for Wallet sits in the app\'s own cache. There are no ads, no analytics and no tracking.</string>
+    <string name="shashinki_about_terms_title">Terms</string>
+    <string name="shashinki_about_terms">This app is free software under the GNU General Public License v3 or later. It comes with no warranty: use it at your own risk.</string>
+    <string name="shashinki_about_after">Open Camera by Mark Harman is the camera itself: everything here but its face.</string>
+    <string name="shashinki_about_source">Source code: github.com/wanderwildwood/shashinki</string>
     <string name="shashinki_about_icons">Icons from Material Symbols, Apache 2.0</string>
     <string name="shashinki_about_zxing">QR codes read by ZXing, Apache 2.0</string>
     <string name="shashinki_about_feed_the_llamas">feed the llamas</string>

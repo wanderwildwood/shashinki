@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -310,45 +308,58 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp).verticalScroll(rememberScrollState()),
+        // Paged on whole rows, like every list in the shop; nothing scrolls.
+        PagedColumn(
+            Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(8.dp))
+            item { Spacer(Modifier.height(8.dp)) }
             if (drawn != null) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Image(
-                        bitmap = drawn.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        // Whole pixels, so every module stays black or white on the panel.
-                        filterQuality = FilterQuality.None,
-                        modifier = Modifier.size(QR_SIZE),
-                    )
+                item {
+                    Box(Modifier.fillMaxWidth().padding(bottom = 8.dp), contentAlignment = Alignment.Center) {
+                        Image(
+                            bitmap = drawn.asImageBitmap(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            // Whole pixels, so every module stays black or white on the panel.
+                            filterQuality = FilterQuality.None,
+                            modifier = Modifier.size(QR_SIZE),
+                        )
+                    }
                 }
-                Spacer(Modifier.height(8.dp))
             }
-            TextMMD(
-                text = found.shown,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+            item {
+                TextMMD(
+                    text = found.shown,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             if (found.action != null && found.intent == null) {
                 // Say it, rather than offer a button that does nothing.
-                Spacer(Modifier.height(6.dp))
-                TextMMD(text = stringResource(R.string.qr_no_app), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                item {
+                    TextMMD(
+                        text = stringResource(R.string.qr_no_app),
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                    )
+                }
             }
-            Spacer(Modifier.height(12.dp))
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (found.action != null && found.intent != null) {
+            item { Spacer(Modifier.height(12.dp)) }
+            if (found.action != null && found.intent != null) {
+                item {
                     Choice(stringResource(found.action)) {
                         runCatching { context.startActivity(found.intent) }
                         onClose()
                     }
                 }
-                if (wallet != null && drawn != null) {
+            }
+            if (wallet != null && drawn != null) {
+                item {
                     Choice(stringResource(R.string.qr_save_wallet)) {
                         val picture = runCatching { keep(context, drawn) }.getOrNull()
                         if (picture != null) {
@@ -362,21 +373,22 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
                         }
                     }
                 }
+            }
+            item {
                 Choice(stringResource(R.string.qr_copy)) {
                     val clip = context.getSystemService(ClipboardManager::class.java)
                     clip?.setPrimaryClip(ClipData.newPlainText(null, found.raw))
                     Toast.makeText(context, R.string.qr_copied, Toast.LENGTH_SHORT).show()
                 }
-                Choice(stringResource(R.string.shashinki_close), onClose)
             }
-            Spacer(Modifier.height(12.dp))
+            item { Choice(stringResource(R.string.shashinki_close), onClose) }
         }
     }
 }
 
 @Composable
 private fun Choice(label: String, onClick: () -> Unit) {
-    OutlinedButtonMMD(onClick = onClick, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+    OutlinedButtonMMD(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(48.dp)) {
         TextMMD(text = label, style = MaterialTheme.typography.bodyMedium)
     }
 }

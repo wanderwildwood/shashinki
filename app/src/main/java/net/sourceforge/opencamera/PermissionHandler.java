@@ -66,7 +66,7 @@ public class PermissionHandler {
                 if (MyDebug.LOG)
                     Log.d(TAG, "display rationale for camera permission");
                 permissions = new String[]{Manifest.permission.CAMERA};
-                message_id = R.string.permission_rationale_camera;
+                message_id = R.string.shashinki_permission_camera;
                 break;
             case MY_PERMISSIONS_REQUEST_STORAGE:
                 if (MyDebug.LOG)
@@ -78,13 +78,13 @@ public class PermissionHandler {
                 if (MyDebug.LOG)
                     Log.d(TAG, "display rationale for record audio permission");
                 permissions = new String[]{Manifest.permission.RECORD_AUDIO};
-                message_id = R.string.permission_rationale_record_audio;
+                message_id = R.string.shashinki_permission_microphone;
                 break;
             case MY_PERMISSIONS_REQUEST_LOCATION:
                 if (MyDebug.LOG)
                     Log.d(TAG, "display rationale for location permission");
                 permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
-                message_id = R.string.permission_rationale_location;
+                message_id = R.string.shashinki_permission_location;
                 break;
             default:
                 if (MyDebug.LOG)
@@ -94,20 +94,23 @@ public class PermissionHandler {
         }
 
         if( ok ) {
-            final String [] permissions_f = permissions;
-            new AlertDialog.Builder(main_activity)
-            .setTitle(R.string.permission_rationale_title)
-            .setMessage(message_id)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(android.R.string.ok, null)
-            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                public void onDismiss(DialogInterface dialog) {
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "requesting permission...");
-                    ActivityCompat.requestPermissions(main_activity, permissions_f, permission_code);
-                }
-            }).show();
+            // shashinki: no stock dialog (it is a second screen to read and dismiss on this panel);
+            // the system's own question follows at once, and the viewfinder says why the camera
+            // is wanted if the answer was no (CameraLayer).
+            ActivityCompat.requestPermissions(main_activity, permissions, permission_code);
         }
+    }
+
+    /** shashinki: the camera permission was asked for and refused at least once in this run. */
+    public boolean cameraDenied() {
+        return camera_denied;
+    }
+
+    /** shashinki: ask for the camera again (the system says nothing and returns at once if it
+     *  has been refused for good; the viewfinder then offers the app's settings instead). */
+    public void askForCamera() {
+        camera_denied = false;
+        requestCameraPermission();
     }
 
     void requestCameraPermission() {
@@ -254,6 +257,7 @@ public class PermissionHandler {
                         Log.d(TAG, "camera permission denied");
                     camera_denied = true;
                     camera_denied_time_ms = System.currentTimeMillis();
+                    com.wanderwildwood.shashinki.ui.CameraLayer.refreshSoon();
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     // Open Camera doesn't need to do anything: the camera will remain closed
@@ -298,6 +302,7 @@ public class PermissionHandler {
                         Log.d(TAG, "record audio permission denied");
                     audio_denied = true;
                     audio_denied_time_ms = System.currentTimeMillis();
+                    com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.shashinki_no_sound);
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     // no need to do anything

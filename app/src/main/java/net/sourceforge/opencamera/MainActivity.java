@@ -3956,6 +3956,30 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         push_switched_camera = false; // just in case
     }
 
+    /** shashinki: a full-screen panel (settings, a code read from the viewfinder) is about to
+     *  cover the viewfinder, so the camera is closed rather than left running unseen. Unlike
+     *  setWindowFlagsForSettings() this leaves the orientation alone. */
+    public void closeCameraForPanel() {
+        if( camera_in_background )
+            return;
+        camera_in_background = true;
+        applicationInterface.getLocationSupplier().freeLocationListeners();
+        preview.onPause(false);
+    }
+
+    /** shashinki: the panel is gone; open the camera again, reading the settings as they now are. */
+    public void reopenCameraAfterPanel() {
+        if( !camera_in_background )
+            return;
+        camera_in_background = false;
+        if( !app_is_paused && !isFinishing() ) {
+            initLocation();
+            com.wanderwildwood.shashinki.ui.CameraLayer.resume(this);
+            preview.onResume();
+            updateForSettings(false);
+        }
+    }
+
     private void showWhenLocked(boolean show) {
         if( MyDebug.LOG )
             Log.d(TAG, "showWhenLocked: " + show);
