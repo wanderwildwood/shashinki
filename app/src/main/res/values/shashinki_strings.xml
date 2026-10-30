@@ -114,9 +114,19 @@
     <string name="shashinki_about_terms">This app is free software under the GNU General Public License v3 or later. It comes with no warranty: use it at your own risk.</string>
     <string name="shashinki_about_after">Open Camera by Mark Harman is the camera itself: everything here but its face.</string>
     <string name="shashinki_about_source">Source code: github.com/wanderwildwood/shashinki</string>
-    <string name="shashinki_about_icons">Icons from Material Symbols, Apache 2.0</string>
-    <string name="shashinki_about_zxing">QR codes read by ZXing, Apache 2.0</string>
     <string name="shashinki_about_feed_the_llamas">feed the llamas</string>
     <string name="shashinki_about_no_browser">There is no browser on this phone to open that with.</string>
     <string name="shashinki_about_close">Close</string>
+    <!-- Licences page, opened from About -->
+    <string name="about_licences">Licences</string>
+    <string name="licences_title">Licences</string>
+    <string name="licences_source_head">Source code</string>
+    <string name="licences_licence_head">Licence</string>
+    <string name="licences_licence">Camera is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own licence and its authors keep their copyright, as listed under Built with. The full text is at the end of this page.</string>
+    <string name="licences_built_head">Built with</string>
+    <string name="licences_back">Back</string>
+    <string name="licences_no_browser">No browser is installed</string>
+    <string name="licences_gpl">GNU General Public License, version 3</string>
+    <string name="licences_apache">Apache License, version 2.0</string>
+    <string name="licences_ofl">SIL Open Font License, version 1.1</string>
 </resources>

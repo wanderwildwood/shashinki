@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +41,12 @@ import net.sourceforge.opencamera.R
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    var licences by rememberSaveable { mutableStateOf(false) }
     EInkDialog(onDismiss = onDismiss) {
+        if (licences) {
+            LicencesPage(onBack = { licences = false }, room = 380.dp)
+            return@EInkDialog
+        }
         TextMMD(
             text = stringResource(R.string.shashinki_about_title, BuildConfig.VERSION_NAME),
             style = MaterialTheme.typography.bodyLarge,
@@ -61,12 +70,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 }
             }
             item {
-                Column {
-                    Body(stringResource(R.string.shashinki_about_after))
-                    Body(stringResource(R.string.shashinki_about_icons))
-                    Body(stringResource(R.string.shashinki_about_zxing))
-                }
+                Body(
+                    stringResource(R.string.about_licences),
+                    Modifier.clickable { licences = true },
+                )
             }
+            item { Body(stringResource(R.string.shashinki_about_after)) }
             item {
                 // The source, as the licence asks of anyone who hands the program on.
                 Body(

@@ -112,6 +112,9 @@ License 2.0. Codes are read by [ZXing](https://github.com/zxing/zxing), Apache L
 reading them — the middle square at the camera's own sharpness, frame after frame — follows
 [QR & Barcode Scanner](https://github.com/wewewe718/QrAndBarcodeScanner) by wewewe718 (The Unlicense).
 
+The app's own **Licences** page (About) gives the source address, this list and the full text of
+each licence, so none of it depends on this repository.
+
 ## Getting it, and keeping it
 
 Download <https://github.com/wanderwildwood/shashinki/releases/latest/download/shashinki.apk>
