@@ -1114,4 +1114,10 @@
             <li>Various other improvements and bug fixes.\n</li>
         </ul>
     </string>
+    <!-- The folio at the foot of a paged list, "2 / 6"; a tap on it asks for a page -->
+    <string name="folio_of">%1$d / %2$d</string>
+    <string name="folio_go_title">Go to page</string>
+    <string name="folio_page">Page %1$d of %2$d</string>
+    <string name="folio_go">Go</string>
+    <string name="folio_cancel">Cancel</string>
 </resources>
