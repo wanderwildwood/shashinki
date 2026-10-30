@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -125,8 +126,14 @@ fun PagedColumn(
     var reserved by remember(state) { mutableStateOf(false) }
     // Only a list longer than its screen pages, and only that one gets the blank tail: a list
     // that fits keeps its arrangement, centred or at the foot as it was asked.
+    var room by remember(state) { mutableStateOf(0) }
     val pages by remember(state) {
-        derivedStateOf { state.overflows(if (reserved) strip else 0) }
+        // The question is asked of the room the list and its folio strip share, which the Column
+        // below measures and which does not change when the strip is reserved. Asked of the list's
+        // own viewport instead, it would answer for a layout that has not happened yet: a list
+        // that overflows by less than the strip then flips the strip on and off with no frame
+        // between, for ever, on the main thread.
+        derivedStateOf { state.overflows(if (room > 0) room else state.layoutInfo.viewportSize.height + (if (reserved) strip else 0)) }
     }
     val spread by remember(state) { derivedStateOf(structuralEqualityPolicy()) { state.spread() } }
     val heights = remember(state) { RowHeights() }
@@ -153,7 +160,7 @@ fun PagedColumn(
     }
 
     Box(modifier.padding(top = contentPadding.calculateTopPadding(), bottom = contentPadding.calculateBottomPadding())) {
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().onSizeChanged { room = it.height }) {
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 // Room after the last row for it to come to the top, so the list never has to line
                 // its end up with the bottom of the screen.
@@ -392,14 +399,14 @@ private fun LazyListState.rowCount(): Int = layoutInfo.totalItemsCount - if (has
 private fun LazyListState.rows(): List<LazyListItemInfo> =
     layoutInfo.visibleItemsInfo.filter { it.key != TAIL }
 
-/** Whether the rows run past one screen, before it or after it; [strip] is room already given to the folio. */
-private fun LazyListState.overflows(strip: Int = 0): Boolean {
+/** Whether the rows run past one screen, before it or after it; [room] is the height the rows and the folio strip share. */
+private fun LazyListState.overflows(room: Int): Boolean {
     val rows = rows()
     if (rows.isEmpty()) return false
     val first = rows.first()
     val last = rows.last()
     return first.index > 0 || first.offset < 0 || last.index < rowCount() - 1 ||
-        last.offset + last.size > layoutInfo.viewportSize.height + strip
+        last.offset + last.size > room
 }
 
 /**
