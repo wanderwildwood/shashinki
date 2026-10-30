@@ -129,4 +129,5 @@
     <string name="licences_gpl">GNU General Public License, version 3</string>
     <string name="licences_apache">Apache License, version 2.0</string>
     <string name="licences_ofl">SIL Open Font License, version 1.1</string>
+    <string name="about_no_browser_address">No browser is installed. The address is %1$s.</string>
 </resources>

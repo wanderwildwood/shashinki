@@ -1,0 +1,17 @@
+<resources>
+    <!--
+        Android 12 and later draw a splash screen whether or not an app asks, and the only lever is
+        what it draws: nothing, on white, with no animation. A logo that flashes up and goes is a
+        full-panel refresh on e-ink before the app has done anything. Keep the items in step with
+        AppTheme in values/styles.xml.
+    -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_nothing</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+</resources>

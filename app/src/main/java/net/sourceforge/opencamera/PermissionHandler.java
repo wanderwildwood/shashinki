@@ -20,7 +20,7 @@ public class PermissionHandler {
     final private static int MY_PERMISSIONS_REQUEST_CAMERA = 0;
     final private static int MY_PERMISSIONS_REQUEST_STORAGE = 1;
     final private static int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 2;
-    final private static int MY_PERMISSIONS_REQUEST_LOCATION = 3;
+    public final static int MY_PERMISSIONS_REQUEST_LOCATION = 3;
 
     private boolean camera_denied; // whether the user requested to deny a camera permission
     private long camera_denied_time_ms; // if denied, the time when this occurred

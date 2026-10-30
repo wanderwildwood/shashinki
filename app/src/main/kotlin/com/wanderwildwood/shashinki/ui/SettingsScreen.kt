@@ -59,6 +59,17 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     var version by remember { mutableIntStateOf(0) }
     fun changed() { version++ }
 
+    // The answer to the location question arrives while this screen is paused behind Android's
+    // dialog; read the settings again when it comes back, so the switch shows what is true.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) changed()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     var aboutOpen by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf<Pick?>(null) }
     var folderOpen by remember { mutableStateOf(false) }
@@ -174,7 +185,9 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                         ActivityCompat.requestPermissions(
                             activity,
                             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                            LOCATION_REQUEST,
+                            // The camera's own handler answers this one: it turns the setting back
+                            // off when the answer is no, and the screen reads that on resume.
+                            net.sourceforge.opencamera.PermissionHandler.MY_PERMISSIONS_REQUEST_LOCATION,
                         )
                     }
                     changed()
@@ -271,7 +284,6 @@ private enum class Pick { PICTURE, VIDEO }
 
 private val QUALITIES = listOf("85", "90", "95", "100")
 private val TIMERS = listOf("0", "3", "5", "10")
-private const val LOCATION_REQUEST = 7301
 
 /** "3264 × 2448 · 8 MP", the shape Open Camera's own list uses, said plainly. Under one
  *  megapixel it keeps a decimal, and under a tenth two, so a small size does not read as

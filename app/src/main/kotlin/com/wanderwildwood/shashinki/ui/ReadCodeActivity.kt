@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalCursorBlinkEnabled
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,8 @@ class ReadCodeActivity : ComponentActivity() {
         val picture = picture(intent)
         setContent {
             ThemeMMD(colorScheme = monochrome) {
+              // A blinking cursor in the page-number dialog repaints the panel twice a second.
+              CompositionLocalProvider(LocalCursorBlinkEnabled provides false) {
                 // null while reading; then what was found, or why nothing was.
                 var state by remember { mutableStateOf<Read?>(null) }
                 LaunchedEffect(picture) {
@@ -78,6 +82,7 @@ class ReadCodeActivity : ComponentActivity() {
                         }
                     }
                 }
+              }
             }
         }
     }

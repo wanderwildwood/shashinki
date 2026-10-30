@@ -353,7 +353,14 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
             if (found.action != null && found.intent != null) {
                 item {
                     Choice(stringResource(found.action)) {
-                        runCatching { context.startActivity(found.intent) }
+                        val data = found.intent.data
+                        if (data != null && (data.scheme == "http" || data.scheme == "https")) {
+                            // A web address goes through the guarded opener: on the Kompakt the only
+                            // thing that answers it can be the WebView test shell, which crashes.
+                            openLink(context, data.toString(), context.getString(R.string.about_no_browser_address, data.toString()))
+                        } else if (runCatching { context.startActivity(found.intent) }.isFailure) {
+                            Toast.makeText(context, R.string.qr_no_app, Toast.LENGTH_LONG).show()
+                        }
                         onClose()
                     }
                 }

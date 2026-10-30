@@ -42,7 +42,8 @@ import net.sourceforge.opencamera.R
 fun AboutDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var licences by rememberSaveable { mutableStateOf(false) }
-    EInkDialog(onDismiss = onDismiss) {
+    // Back in the Licences page goes back to the About, not out of both.
+    EInkDialog(onDismiss = { if (licences) licences = false else onDismiss() }) {
         if (licences) {
             LicencesPage(onBack = { licences = false }, room = 380.dp)
             return@EInkDialog
@@ -81,11 +82,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 Body(
                     stringResource(R.string.shashinki_about_source),
                     Modifier.clickable {
-                        runCatching {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE)))
-                        }.onFailure {
-                            Toast.makeText(context, context.getString(R.string.shashinki_about_no_browser), Toast.LENGTH_SHORT).show()
-                        }
+                        openLink(context, SOURCE, context.getString(R.string.about_no_browser_address, SOURCE.removePrefix("https://")))
                     },
                 )
             }
@@ -138,13 +135,7 @@ private fun Llama() {
                     // The short square.link form, not the long checkout.square.site address it
                     // redirects to -- the short one is what the site itself links to, so a
                     // regenerated checkout follows it and a published app does not break.
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://square.link/u/AGu8oT10")),
-                        )
-                    }.onFailure {
-                        Toast.makeText(context, context.getString(R.string.shashinki_about_no_browser), Toast.LENGTH_SHORT).show()
-                    }
+                    openLink(context, "https://square.link/u/AGu8oT10", context.getString(R.string.about_no_browser_address, "square.link/u/AGu8oT10"))
                 }
                 .heightIn(min = 48.dp)
                 .padding(vertical = 4.dp),

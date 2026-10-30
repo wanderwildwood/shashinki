@@ -1794,7 +1794,7 @@ public class StorageUtils {
                     context.startActivity(intent);
                     done = true;
                 }
-                catch(ActivityNotFoundException e) {
+                catch(RuntimeException e) {
                     // not installed: ask Android for any gallery, as before
                 }
 
@@ -1807,7 +1807,7 @@ public class StorageUtils {
                         context.startActivity(intent);
                         done = true;
                     }
-                    catch(ActivityNotFoundException e) {
+                    catch(RuntimeException e) {
                         MyDebug.logStackTrace(TAG, "failed to start REVIEW_ACTION intent", e);
                     }
                 }
@@ -1820,7 +1820,7 @@ public class StorageUtils {
                         context.startActivity(intent);
                         done = true;
                     }
-                    catch(ActivityNotFoundException e) {
+                    catch(RuntimeException e) {
                         MyDebug.logStackTrace(TAG, "failed to start REVIEW_ACTION intent", e);
                     }
                 }
@@ -1832,13 +1832,11 @@ public class StorageUtils {
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     context.startActivity(intent);
                 }
-                catch(ActivityNotFoundException e) {
+                catch(RuntimeException e) {
                     MyDebug.logStackTrace(TAG, "failed to start ACTION_VIEW intent", e);
-                    ((MainActivity)context).getPreview().showToast(null, R.string.no_gallery_app);
-                }
-                catch(SecurityException e) {
-                    // have received this crash from Google Play - don't display a toast, simply do nothing
-                    MyDebug.logStackTrace(TAG, "SecurityException from ACTION_VIEW startActivity", e);
+                    // The camera's own toasts are switched off, so say it plainly with a system one:
+                    // a tap on the gallery thumbnail must never end in nothing, or in a crash.
+                    android.widget.Toast.makeText(context, R.string.no_gallery_app, android.widget.Toast.LENGTH_LONG).show();
                 }
             }
         }
