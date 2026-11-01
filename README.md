@@ -1,4 +1,4 @@
-# Camera
+# Lens
 
 写真機 *shashinki*
 
@@ -19,7 +19,7 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
 
 - **Photos and video.** One line above the shutter switches between them. While recording,
   the shutter is a square and the line says so; there is no running clock.
-- **The last picture** opens in Gallery (画廊 garō), inside its folder, whenever Gallery is
+- **The last picture** opens in Pictures (画廊 garō), inside its folder, whenever Pictures is
   installed, even if another gallery is the phone's default; otherwise in the phone's gallery.
 - **Shadows, HDR and Night**, on the same line. One press of Shadows brightens the dark parts
   of a single shot (Open Camera's DRO), so it is as quick as a plain photo and fine handheld,
@@ -59,7 +59,7 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   that can.
 
 Photos and videos go to `DCIM/Camera`, where Android's own camera puts them, unless the folder
-is changed, so they appear in Gallery. With Gallery's backup turned on, Camera tells Gallery the
+is changed, so they appear in Pictures. With Pictures' backup turned on, Lens tells Pictures the
 moment it has saved a photo, and it goes up to Immich then.
 
 When the camera cannot be opened — on a Kompakt, usually because the switch on the left side

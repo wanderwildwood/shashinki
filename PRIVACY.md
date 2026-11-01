@@ -1,6 +1,6 @@
 # Privacy
 
-Camera takes photos and videos and keeps them on the phone. It has no way to send anything
+Lens takes photos and videos and keeps them on the phone. It has no way to send anything
 anywhere.
 
 That is the whole policy. The rest of this page is the evidence for it.
@@ -37,7 +37,7 @@ settings, in the app's own preferences.
 ## No analytics
 
 No crash reporting, no telemetry, no advertising identifier, no third-party SDK. Open
-Camera has none either.
+Lens has none either.
 
 ## Checking any of this for yourself
 

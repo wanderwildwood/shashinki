@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This app's own words. Kept apart from upstream's strings.xml, which stays as Open Camera has it. -->
 <resources>
-    <string name="shashinki_app_name">Camera</string>
+    <string name="shashinki_app_name">Lens</string>
 
     <!-- Main screen -->
     <string name="shashinki_photo">Photo</string>
@@ -32,7 +32,7 @@
     <string name="shashinki_camera_stopped">The camera stopped working. Leave the app and open it again to restart it.</string>
     <string name="shashinki_photo_failed">That photo could not be taken. Try again.</string>
     <!-- Shown over the viewfinder when the camera was refused, with a button to put it right -->
-    <string name="shashinki_permission_camera">Camera cannot show anything until it is allowed to use the phone\'s camera.</string>
+    <string name="shashinki_permission_camera">Lens cannot show anything until it is allowed to use the phone\'s camera.</string>
     <string name="shashinki_allow_camera">Allow the camera</string>
     <string name="shashinki_open_app_settings">Open the app\'s settings</string>
     <string name="shashinki_permission_microphone">The microphone is used only while a video is recording, for its sound.</string>
@@ -107,7 +107,7 @@
     <string name="shashinki_save">Save</string>
 
     <!-- About. Keep the names of the app, people, projects and licences as they are -->
-    <string name="shashinki_about_title">Camera %1$s</string>
+    <string name="shashinki_about_title">Lens %1$s</string>
     <string name="shashinki_about_privacy_title">Privacy</string>
     <string name="shashinki_about_privacy">Everything you photograph or record stays on this phone. The app has no internet access, so nothing is sent anywhere, and nothing is collected about you. It uses the camera to take pictures, the microphone only while a video is recording, and the phone\'s location only if you turn on \"Where a photo was taken\", when the place is written into each photo. Pictures and videos are saved under DCIM, where other apps on the phone can read them. A code you read is handed to another app only when you press its button; the picture kept for Wallet sits in the app\'s own cache. There are no ads, no analytics and no tracking.</string>
     <string name="shashinki_about_terms_title">Terms</string>
@@ -122,12 +122,8 @@
     <string name="licences_title">Licences</string>
     <string name="licences_source_head">Source code</string>
     <string name="licences_licence_head">Licence</string>
-    <string name="licences_licence">Camera is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own licence and its authors keep their copyright, as listed under Built with. The full text is at the end of this page.</string>
+    <string name="licences_licence">Lens is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own licence and its authors keep their copyright, as listed under Built with. The full text is at the end of this page.</string>
     <string name="licences_built_head">Built with</string>
     <string name="licences_back">Back</string>
-    <string name="licences_no_browser">No browser is installed</string>
-    <string name="licences_gpl">GNU General Public License, version 3</string>
-    <string name="licences_apache">Apache License, version 2.0</string>
-    <string name="licences_ofl">SIL Open Font License, version 1.1</string>
     <string name="about_no_browser_address">No browser is installed. The address is %1$s.</string>
 </resources>

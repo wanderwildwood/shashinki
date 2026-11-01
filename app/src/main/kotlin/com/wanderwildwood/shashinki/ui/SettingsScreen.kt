@@ -111,7 +111,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
         val qr = prefs.getBoolean(Defaults.QR, true)
         val grid = prefs.getBoolean(Defaults.GRID, false)
         val folder = prefs.getString(PreferenceKeys.SaveLocationPreferenceKey, "Camera") ?: "Camera"
-        PagedColumn(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
+        PagedColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 12.dp)) {
             item { Spacer(Modifier.height(8.dp)) }
 
             item {

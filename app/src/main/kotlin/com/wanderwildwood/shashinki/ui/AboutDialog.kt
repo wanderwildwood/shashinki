@@ -45,7 +45,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
     // Back in the Licences page goes back to the About, not out of both.
     EInkDialog(onDismiss = { if (licences) licences = false else onDismiss() }) {
         if (licences) {
-            LicencesPage(onBack = { licences = false }, room = 380.dp)
+            LicencesScreen(rememberLicencesData(), rememberLicencesLabels(), onBack = { licences = false }, modifier = Modifier.fillMaxWidth().height(380.dp))
             return@EInkDialog
         }
         TextMMD(

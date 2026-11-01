@@ -310,8 +310,9 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
     ) { padding ->
         // Paged on whole rows, like every list in the shop; nothing scrolls.
         PagedColumn(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp),
+            Modifier.fillMaxSize().padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 12.dp),
         ) {
             item { Spacer(Modifier.height(8.dp)) }
             if (drawn != null) {
