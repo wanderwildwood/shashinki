@@ -21,7 +21,7 @@
     <!-- Shown while HDR+ or Night takes its frames -->
     <string name="shashinki_hold_still">Hold still</string>
     <!-- Shown while the self-timer counts down -->
-    <string name="shashinki_timer_running">Timer running</string>
+    <string name="shashinki_timer_running">Timer on</string>
     <!-- Read aloud by a screen reader -->
     <string name="shashinki_cd_settings">Settings</string>
     <string name="shashinki_cd_gallery">The last picture</string>
