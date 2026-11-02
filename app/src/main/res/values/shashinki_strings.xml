@@ -113,9 +113,7 @@
     <string name="shashinki_about_terms_title">Terms</string>
     <string name="shashinki_about_terms">This app is free software under the GNU General Public License v3 or later. It comes with no warranty: use it at your own risk.</string>
     <string name="shashinki_about_after">Open Camera by Mark Harman is the camera itself: everything here but its face.</string>
-    <string name="shashinki_about_source">Source code: github.com/wanderwildwood/shashinki</string>
-    <string name="shashinki_about_feed_the_llamas">feed the llamas</string>
-    <string name="shashinki_about_no_browser">There is no browser on this phone to open that with.</string>
+    <string name="shashinki_about_feed_the_llamas">Feed the llamas</string>
     <string name="shashinki_about_close">Close</string>
     <!-- Licences page, opened from About -->
     <string name="about_licences">Licences</string>
