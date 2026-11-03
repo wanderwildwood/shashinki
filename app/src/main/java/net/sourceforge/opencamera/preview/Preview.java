@@ -8805,10 +8805,14 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         private final WeakReference<Bitmap> focus_peaking_bitmap_buffer_tempReference;
         private final boolean update_histogram;
         private final boolean update_preshot;
-        private final int preview_bitmap_full_w;
-        private final int preview_bitmap_full_h;
+        // the pre-shot frame, already copied from the TextureView on the UI thread (or null)
+        private final Bitmap preview_bitmap_full_copy;
 
-        RefreshPreviewBitmapTask(Preview preview, boolean update_histogram, boolean update_preshot, int preview_bitmap_full_w, int preview_bitmap_full_h) {
+        /** preview_bitmap must already hold the current frame, and preview_bitmap_full_copy (if not
+         *  null) a copy of it at full size: TextureView.getBitmap() is a UI-thread call, so the
+         *  caller takes both copies there, and this task only works on them.
+         */
+        RefreshPreviewBitmapTask(Preview preview, boolean update_histogram, boolean update_preshot, Bitmap preview_bitmap_full_copy) {
             this.previewReference = new WeakReference<>(preview);
             this.preview_bitmapReference = new WeakReference<>(preview.preview_bitmap);
             this.zebra_stripes_bitmap_bufferReference = new WeakReference<>(preview.zebra_stripes_bitmap_buffer);
@@ -8816,8 +8820,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             this.focus_peaking_bitmap_buffer_tempReference = new WeakReference<>(preview.focus_peaking_bitmap_buffer_temp);
             this.update_histogram = update_histogram;
             this.update_preshot = update_preshot;
-            this.preview_bitmap_full_w = preview_bitmap_full_w;
-            this.preview_bitmap_full_h = preview_bitmap_full_h;
+            this.preview_bitmap_full_copy = preview_bitmap_full_copy;
         }
 
         @Override
@@ -8848,34 +8851,9 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             RefreshPreviewBitmapTaskResult result = new RefreshPreviewBitmapTaskResult();
 
             try {
-                if( MyDebug.LOG )
-                    Log.d(TAG, "time before getBitmap: " + (System.currentTimeMillis() - debug_time));
-                TextureView textureView = (TextureView)preview.cameraSurface;
-                if( preview_bitmap != null ) {
-                    textureView.getBitmap(preview_bitmap);
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "time after getBitmap: " + (System.currentTimeMillis() - debug_time));
-                }
-                if( preview_bitmap_full_w != -1 && preview_bitmap_full_h != -1 && update_preshot ) {
-                    // much faster to create a fresh preview_bitmap_full to read into, instead of copying it after
-                    try {
-                        if( MyDebug.LOG )
-                            Log.d(TAG, "time before creating preview_bitmap_full_copy: " + (System.currentTimeMillis() - debug_time));
-                        result.preview_bitmap_full_copy = Bitmap.createBitmap(preview_bitmap_full_w, preview_bitmap_full_h, Bitmap.Config.ARGB_8888);
-                        if( MyDebug.LOG )
-                            Log.d(TAG, "time after creating preview_bitmap_full_copy: " + (System.currentTimeMillis() - debug_time));
-                        textureView.getBitmap(result.preview_bitmap_full_copy);
-                        if( MyDebug.LOG )
-                            Log.d(TAG, "time after getBitmap for preview_bitmap_full_copy: " + (System.currentTimeMillis() - debug_time));
-                        // See comments below for zebra stripes for why we need to rotate
-                        // But since rotating is slower (and presumably more CPU intensive) than taking a copy, we leave this to the ImageSaver thread -
-                        // although that'll also be just as slow, better to only do it when we're actually saving pre-shots,
-                        // rather than having this run all the time.
-                        // Also see above - it's much faster to create a new bitmap to read into, than to copy a bitmap
-                    }
-                    catch(IllegalArgumentException e) {
-                        MyDebug.logStackTrace(TAG, "failed to create preview_bitmap_full_copy", e);
-                    }
+                // the frame was copied from the TextureView on the UI thread, in refreshPreviewBitmap()
+                if( update_preshot ) {
+                    result.preview_bitmap_full_copy = preview_bitmap_full_copy;
                 }
 
                 if( MyDebug.LOG )
@@ -9010,7 +8988,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 }
             }
             catch(IllegalStateException e) {
-                MyDebug.logStackTrace(TAG, "failed to getBitmap", e);
+                MyDebug.logStackTrace(TAG, "failed to process preview bitmap", e);
             }
 
             if( MyDebug.LOG ) {
@@ -9123,7 +9101,33 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 update_preshot = true;
             }
 
-            refreshPreviewBitmapTask = new RefreshPreviewBitmapTask(this, update_histogram, update_preshot, preview_bitmap_full_w, preview_bitmap_full_h);
+            // TextureView.getBitmap() must be called on the UI thread (upstream called it from the
+            // background task); this is called from onSurfaceTextureUpdated(), on the UI thread, and
+            // no task is running, so preview_bitmap is not being read. The background task then works
+            // only on these copies.
+            Bitmap preview_bitmap_full_copy = null;
+            try {
+                TextureView textureView = (TextureView)cameraSurface;
+                if( preview_bitmap != null ) {
+                    textureView.getBitmap(preview_bitmap);
+                }
+                if( preview_bitmap_full_w != -1 && preview_bitmap_full_h != -1 && update_preshot ) {
+                    // much faster to create a fresh preview_bitmap_full to read into, instead of copying it after
+                    try {
+                        preview_bitmap_full_copy = Bitmap.createBitmap(preview_bitmap_full_w, preview_bitmap_full_h, Bitmap.Config.ARGB_8888);
+                        textureView.getBitmap(preview_bitmap_full_copy);
+                    }
+                    catch(IllegalArgumentException e) {
+                        MyDebug.logStackTrace(TAG, "failed to create preview_bitmap_full_copy", e);
+                        preview_bitmap_full_copy = null;
+                    }
+                }
+            }
+            catch(IllegalStateException e) {
+                MyDebug.logStackTrace(TAG, "failed to getBitmap", e);
+            }
+
+            refreshPreviewBitmapTask = new RefreshPreviewBitmapTask(this, update_histogram, update_preshot, preview_bitmap_full_copy);
             refreshPreviewBitmapTask.execute();
         }
     }
