@@ -21,6 +21,8 @@
 
     <application
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/no_backup"
+        android:fullBackupContent="false"
         android:icon="@drawable/ic_launcher_mudita"
         android:roundIcon="@drawable/ic_launcher_mudita"
         android:label="@string/shashinki_app_name"
