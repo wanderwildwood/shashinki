@@ -1,6 +1,7 @@
 package net.sourceforge.opencamera.remotecontrol;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 //import android.app.ListActivity;
@@ -39,6 +40,9 @@ import java.util.ArrayList;
 
 //public class DeviceScanner extends ListActivity {
 //public class DeviceScanner extends Activity {
+// Lens leaves Open Camera's Bluetooth remote out: no BLUETOOTH_* permission, and neither this
+// class nor its partner is declared in the manifest, so these calls can never run.
+@SuppressLint("MissingPermission")
 public class DeviceScanner extends AppCompatActivity {
     private static final String TAG = "OC-BLEScanner";
     private LeDeviceListAdapter leDeviceListAdapter;

@@ -3,6 +3,7 @@ package net.sourceforge.opencamera.remotecontrol;
 import net.sourceforge.opencamera.MyDebug;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -35,6 +36,9 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 @RequiresApi(api = Build.VERSION_CODES.S)
+// Lens leaves Open Camera's Bluetooth remote out: no BLUETOOTH_* permission, and neither this
+// class nor its partner is declared in the manifest, so these calls can never run.
+@SuppressLint("MissingPermission")
 public class BluetoothLeService extends Service {
     private final static String TAG = "BluetoothLeService";
 
