@@ -17,6 +17,10 @@ fun AboutDialog(onDismiss: () -> Unit) {
         title = stringResource(R.string.shashinki_about_title, BuildConfig.VERSION_NAME),
         sections = listOf(
             AboutSection(stringResource(R.string.shashinki_about_privacy_title), stringResource(R.string.shashinki_about_privacy)),
+            AboutSection(null, stringResource(R.string.shashinki_about_privacy_more)),
+            AboutSection(stringResource(R.string.privacy_who_title), stringResource(R.string.privacy_who)),
+            AboutSection(stringResource(R.string.privacy_contact_title), stringResource(R.string.privacy_contact)),
+            AboutSection(stringResource(R.string.privacy_rights_title), stringResource(R.string.privacy_rights)),
             AboutSection(stringResource(R.string.shashinki_about_terms_title), stringResource(R.string.shashinki_about_terms)),
             AboutSection(null, stringResource(R.string.shashinki_about_after)),
         ),
@@ -27,6 +31,8 @@ fun AboutDialog(onDismiss: () -> Unit) {
         licences = stringResource(R.string.licences_title),
         feedTheLlamas = stringResource(R.string.shashinki_about_feed_the_llamas),
         noBrowser = { address -> context.getString(R.string.about_no_browser_address, address) },
+        writeTo = { address -> context.getString(R.string.about_write_to, address) },
+        noMailApp = { address -> context.getString(R.string.about_no_mail_app, address) },
     )
     HouseAboutDialog(data, labels, R.drawable.llama, onDismiss) { modifier, back ->
         LicencesScreen(rememberLicencesData(), rememberLicencesLabels(), onBack = back, modifier = modifier)

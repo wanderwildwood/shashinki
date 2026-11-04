@@ -34,10 +34,18 @@ on a code the camera has read, the code is drawn as a picture and kept in the ap
 (one file, replaced by the next); it is handed only to Wallet. Nothing else is written except the
 settings, in the app's own preferences.
 
+## Outside services
+
+Lens itself talks to no one. Two buttons hand something to another app, and only when pressed:
+**Look up**, on a shop or book barcode, gives the number to the phone's web search, or opens
+DuckDuckGo with it in the browser when the phone has no search app; and a web address read from a
+code opens in the browser. What the search engine or the website receives is covered by its own
+privacy policy ([DuckDuckGo's](https://duckduckgo.com/privacy)), not by this one.
+
 ## No analytics
 
 No crash reporting, no telemetry, no advertising identifier, no third-party SDK. Open
-Lens has none either.
+Camera itself has none either.
 
 ## Checking any of this for yourself
 
@@ -50,3 +58,29 @@ prints the four above and one more,
 mine: AndroidX defines it for every app, scoped to this package so only this app can hold
 it, so that a broadcast receiver registered at runtime is not exported. It grants access to
 nothing. There is no `INTERNET` in the list.
+
+<!-- shared-about privacy section -->
+## Who we are
+
+Lens is made by wander wildwood, an independent developer: one person, not a company. wander wildwood is the data controller for anything the app itself handles, and that is very little. Lens keeps what you put in it on your phone and sends nothing to the developer, so the developer holds no data about you.
+
+## How to contact us
+
+Write to email@wanderthe.dev about your data, this policy or anything else. The same address is in the app, under About.
+
+## Your rights
+
+If you are in the EU, the EEA or the UK, the GDPR gives you the right to:
+
+- see the personal data held about you (access)
+- have it corrected (rectification) or deleted (erasure)
+- limit how it is used (restriction)
+- object to its use (objection)
+- get a copy to take elsewhere (portability)
+- withdraw your consent at any time, where something rests on it
+- complain to a data protection supervisory authority, for example the one where you live
+
+Similar laws elsewhere, such as the CCPA in California, give you the right to know, delete and correct, and to opt out of the sale or sharing of your data. Nothing from Lens is sold or shared.
+
+Since Lens keeps what it stores only on your phone, you can exercise most of these rights yourself: clear the app's data in Android's settings, or uninstall the app, which deletes all of it. For anything you cannot do yourself, write to the address above.
+<!-- /shared-about privacy section -->
