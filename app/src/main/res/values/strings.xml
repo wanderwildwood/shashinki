@@ -33,8 +33,8 @@
     <string name="video">Video</string>
     <string name="exposure_locked">Exposure locked</string>
     <string name="exposure_unlocked">Exposure unlocked</string>
-    <string name="cancelled_timer">Cancelled timer</string>
-    <string name="cancelled_repeat_mode">Cancelled repeat mode</string>
+    <string name="cancelled_timer">Canceled timer</string>
+    <string name="cancelled_repeat_mode">Canceled repeat mode</string>
     <string name="started_timer">Started timer</string>
     <string name="failed_to_save_video">Failed to save video file</string>
     <string name="failed_to_record_video">Failed to record video</string>
@@ -217,7 +217,7 @@
     <string name="preference_record_audio">Record audio</string>
     <string name="preference_record_audio_summary">Record audio when recording video</string>
     <string name="preference_record_audio_src">Audio source</string>
-    <string name="preference_record_audio_src_summary">Microphone to use for recording audio. Note that the exact behaviour of the options depends on how the option is implemented on your device.\n%s</string>
+    <string name="preference_record_audio_src_summary">Microphone to use for recording audio. Note that the exact behavior of the options depends on how the option is implemented on your device.\n%s</string>
     <string name="preference_record_audio_channels">Audio channels</string>
     <string name="preference_record_audio_channels_summary">Specify mono or stereo for recording audio (stereo only supported on some devices)\n%s</string>
     <string name="preference_video_flash">Flash while recording video</string>
@@ -260,7 +260,7 @@
     <string name="folder_exists">Folder already exists</string>
 
     <string name="saf_select_save_location">Select a save location</string>
-    <string name="saf_cancelled">Storage Access Framework cancelled</string>
+    <string name="saf_cancelled">Storage Access Framework canceled</string>
     <string name="saf_permission_failed">Unable to save to this folder</string>
 
     <!-- the permission names such as Microphone should match what Android calls them in the App permission settings -->
@@ -280,7 +280,7 @@
     <string name="audio_listener_started">Make a loud noise</string>
 
     <string name="auto_stabilise_info">Auto-level will automatically rotate photos so that they appear level.\n\nNote that this means images will come out a slightly lower resolution (due to the rotation and cropping that\'s required).</string>
-    <string name="raw_info">DNG files contain the full uncompressed and unprocessed information from your camera.\n\nNote that some gallery apps don\'t recognise DNG files. DNG images can be used with specialised image editors.\n\nNote that various processing options such as \"Stamp photos\" and \"Auto-level\" will only apply to the non-DNG (JPEG/etc) images, and not the DNG images.</string>
+    <string name="raw_info">DNG files contain the full uncompressed and unprocessed information from your camera.\n\nNote that some gallery apps don\'t recognize DNG files. DNG images can be used with specialized image editors.\n\nNote that various processing options such as \"Stamp photos\" and \"Auto-level\" will only apply to the non-DNG (JPEG/etc) images, and not the DNG images.</string>
     <string name="hdr_info">HDR mode is useful for shots with a large variation in brightness. It works by taking multiple shots at different exposures, and combining them to create the final image.\n\nNote that HDR is not suitable for scenes with fast movement, and may result in less accurate color reproduction.\n\nTaking photos in HDR mode will be slower.</string>
 
     <string name="dont_show_again">Don\'t show again</string>
@@ -308,7 +308,7 @@
 
     <string name="preference_category_debugging">Debugging options</string>
     <string name="preference_camera2_fake_flash">Use alternative flash method</string>
-    <string name="preference_camera2_fake_flash_summary">Enable this if your device has buggy flash behaviour with Camera2 API</string>
+    <string name="preference_camera2_fake_flash_summary">Enable this if your device has buggy flash behavior with Camera2 API</string>
 
     <string name="preference_expo_bracketing_n_images">Exposure Bracketing</string>
     <string name="preference_expo_bracketing_n_images_summary">Number of images for exposure bracketing mode\n%s</string>
@@ -446,7 +446,7 @@
     <string name="right_of_screen">at right of screen</string>
     <string name="top_of_screen">at top of screen</string>
     <string name="bottom_of_screen">at bottom of screen</string>
-    <string name="centre_of_screen">at centre</string>
+    <string name="centre_of_screen">at center</string>
 
     <string name="high_speed">High Speed</string> <!-- in the sense of high speed video frame rates -->
 
@@ -602,7 +602,7 @@
 
     <string name="preference_units_distance">Distance unit</string>
     <string name="preference_units_distance_summary">Used for GPS altitude for photo stamp and video subtitles\n%s</string>
-    <string name="preference_units_distance_m">Metres</string>
+    <string name="preference_units_distance_m">Meters</string>
     <string name="preference_units_distance_ft">Feet</string>
     <string name="feet_abbreviation">ft</string> <!-- symbol short for feet -->
 
@@ -677,7 +677,7 @@
     <string name="preference_video_max_filesize_5gb">5GB</string>
     <string name="preference_video_max_filesize_9gb">9GB</string>
 
-    <string name="cancelled_focus_bracketing">Cancelled focus bracketing</string>
+    <string name="cancelled_focus_bracketing">Canceled focus bracketing</string>
 
     <string name="preference_crop_guide_none">None</string>
     <string name="preference_crop_guide_1">1 (1:1)</string>
@@ -871,13 +871,13 @@
 
     <string name="finish_panorama">Finish panorama</string>
     <string name="cancel_panorama">Cancel panorama</string>
-    <string name="panorama_cancelled">Panorama cancelled</string>
+    <string name="panorama_cancelled">Panorama canceled</string>
     <string name="failed_to_process_panorama">Failed to create Panorama image</string>
 
     <string name="preference_panorama_crop">Panorama auto-crop</string>
     <string name="preference_panorama_crop_summary">For panorama mode, whether to remove the wavy boundaries\n%s</string>
 
-    <string name="panorama_info">To take a panorama image, hold your device in portrait orientation, and click to take a photo to start the panorama. Then rotate your device either left or right to move the centred white circle over the blue dot. After each new image is captured, keep rotating your device to cover each new blue dot that appears in turn.\n\nClick the tick icon to save the panorama, or the cross icon to cancel.\n\nNote that panorama photos can take time to process and save.</string>
+    <string name="panorama_info">To take a panorama image, hold your device in portrait orientation, and click to take a photo to start the panorama. Then rotate your device either left or right to move the centered white circle over the blue dot. After each new image is captured, keep rotating your device to cover each new blue dot that appears in turn.\n\nClick the tick icon to save the panorama, or the cross icon to cancel.\n\nNote that panorama photos can take time to process and save.</string>
 
     <string name="preference_panorama_save">Panorama original images</string>
     <string name="preference_panorama_save_summary">Whether to save original images in panorama mode. Note this will make saving panorama photos slower. Also allows the option to save an XML file which can be useful reporting problems with panorama.\n%s</string>
@@ -1015,7 +1015,7 @@
     <string name="focus_peaking_disable">Disable focus peaking</string> <!-- for "ContentDescription" (used for accessibility, e.g., Google Talkback) -->
 
     <string name="preference_photo_optimise_focus">Optimise focus for…</string>
-    <string name="preference_photo_optimise_focus_summary">When taking photos, whether to optimise for latency or quality. Only relevant when using continuous focus mode. Optimising for quality ensures that the scene is focused, but may result in a delay in taking photos.\n%s</string>
+    <string name="preference_photo_optimise_focus_summary">When taking photos, whether to optimize for latency or quality. Only relevant when using continuous focus mode. Optimising for quality ensures that the scene is focused, but may result in a delay in taking photos.\n%s</string>
     <string name="preference_photo_optimise_focus_latency">Latency</string>
     <string name="preference_photo_optimise_focus_quality">Quality</string>
 
@@ -1082,12 +1082,12 @@
         &lt;a href=\"mailto:mark.harman.apps@gmail.com?subject=Open%20Camera%20privacy%20policy\"&gt;mark.harman.apps@gmail.com&lt;/a&gt;.
     </string>
 
-    <string name="preference_screen_licences" translatable="false">Open Source licences</string>
+    <string name="preference_screen_licences" translatable="false">Open Source licenses</string>
     <string name="preference_licence_open_camera" translatable="false">Open Camera</string>
-    <string name="preference_licence_open_camera_text" translatable="false">Open Camera is © 2013–2026 Mark Harman, released under the GPL v3 or later. Tap here for full licence text and terms of service.</string>
+    <string name="preference_licence_open_camera_text" translatable="false">Open Camera is © 2013–2026 Mark Harman, released under the GPL v3 or later. Tap here for full license text and terms of service.</string>
     <string name="preference_licence_androidx" translatable="false">AndroidX libraries</string>
     <string name="preference_licence_androidx_text" translatable="false">Lens uses the AndroidX/Jetpack libraries
-        under the Apache license version 2.0. Tap here for full licence text.</string>
+        under the Apache license version 2.0. Tap here for full license text.</string>
     <string name="preference_licence_google_icons" translatable="false">Google\'s Material Design icons</string>
     <string name="preference_licence_google_icons_text" translatable="false">Lens uses icons from Google\'s Material Design icons
         (https://developer.android.com/design/downloads/index.html ,
@@ -1095,8 +1095,8 @@
         https://github.com/google/material-design-icons/ ,
         https://google.github.io/material-design-icons/ ,
         https://fonts.google.com/icons)
-        under the Apache license version 2.0. Some icons include modifications. Tap here for full licence text.</string>
-    <string name="preference_licence_online" translatable="false">Online licences</string>
+        under the Apache license version 2.0. Some icons include modifications. Tap here for full license text.</string>
+    <string name="preference_licence_online" translatable="false">Online licenses</string>
     <string name="preference_licence_online_text" translatable="false">Please tap here for full online licensing information (opens in your browser).</string>
 
     <!-- There's no point translating the What's New text (and shouldn't be included in language-specific strings.xml) - it'll be updated constantly, and change each version -->
@@ -1117,5 +1117,5 @@
     <string name="licences_full_head">Full texts</string>
     <string name="licences_full_gpl">GNU General Public License v3 (full text)</string>
     <string name="licences_full_apache">Apache License 2.0 (full text)</string>
-    <string name="licences_full_ofl">SIL Open Font Licence 1.1 (full text)</string>
+    <string name="licences_full_ofl">SIL Open Font License 1.1 (full text)</string>
 </resources>
