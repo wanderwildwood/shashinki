@@ -117,12 +117,12 @@
     <string name="shashinki_about_after">Open Camera by Mark Harman is the camera itself: everything here but its face.</string>
     <string name="shashinki_about_feed_the_llamas">Feed the llamas</string>
     <string name="shashinki_about_close">Close</string>
-    <!-- Licences page, opened from About -->
-    <string name="about_licences">Licences</string>
-    <string name="licences_title">Licences</string>
+    <!-- Licenses page, opened from About -->
+    <string name="about_licences">Licenses</string>
+    <string name="licences_title">Licenses</string>
     <string name="licences_source_head">Source code</string>
-    <string name="licences_no_text">%s needs no licence text here.</string>
-    <string name="licences_licence">Lens is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own licence and its authors keep their copyright, each on its own page.</string>
+    <string name="licences_no_text">%s needs no license text here.</string>
+    <string name="licences_licence">Lens is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own license and its authors keep their copyright, each on its own page.</string>
     <string name="licences_back">Back</string>
     <string name="about_no_browser_address">No browser is installed. The address is %1$s.</string>
 </resources>

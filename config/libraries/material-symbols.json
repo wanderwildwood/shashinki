@@ -1,0 +1,8 @@
+{
+  "uniqueId": "material-symbols",
+  "name": "Material Symbols icons",
+  "description": "Icons drawn from Google's Material Symbols set, copied into the app as vector drawables.",
+  "developers": [{ "name": "Google" }],
+  "website": "https://fonts.google.com/icons",
+  "licenses": ["Apache-2.0"]
+}

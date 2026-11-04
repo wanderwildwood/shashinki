@@ -1,0 +1,8 @@
+{
+  "uniqueId": "open-camera-sounds",
+  "name": "Open Camera sounds",
+  "description": "The self-timer beeps, from Open Camera.",
+  "developers": [{ "name": "Mark Harman" }],
+  "website": "https://opencamera.org.uk",
+  "licenses": ["CC0-1.0"]
+}

@@ -1,0 +1,8 @@
+{
+  "uniqueId": "open-camera",
+  "name": "Open Camera",
+  "description": "The camera itself: everything in this app but its face. Its source is built into the app.",
+  "developers": [{ "name": "Mark Harman" }],
+  "website": "https://opencamera.org.uk",
+  "licenses": ["GPL-3.0-or-later"]
+}
