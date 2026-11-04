@@ -294,7 +294,7 @@ object CameraLayer {
 
         val layer = ComposeView(activity).apply {
             setContent {
-                ThemeMMD(colorScheme = monochrome) {
+                ThemeMMD(colorScheme = monochrome, typography = houseTypography) {
                     // A cursor that blinks repaints the panel twice a second for as long as a
                     // text field has focus.
                     CompositionLocalProvider(LocalCursorBlinkEnabled provides false) {

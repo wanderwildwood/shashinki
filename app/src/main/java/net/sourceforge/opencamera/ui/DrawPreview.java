@@ -1968,7 +1968,7 @@ public class DrawPreview {
 
             if( draw_angle && !is_preview_paused ) {
                 int color = Color.WHITE;
-                p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                 int pixels_offset_x;
                 if( draw_geo_direction ) {
                     pixels_offset_x = - (int) (35 * scale_font + 0.5f); // convert dps to pixels
@@ -2016,7 +2016,7 @@ public class DrawPreview {
 
             if( draw_geo_direction && !is_preview_paused ) {
                 int color = Color.WHITE;
-                p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                 int pixels_offset_x;
                 if( draw_angle ) {
                     pixels_offset_x = (int) (10 * scale_font + 0.5f); // convert dps to pixels
@@ -2059,7 +2059,7 @@ public class DrawPreview {
                 String time_s = getTimeStringFromSeconds(video_time/1000);
             	/*if( MyDebug.LOG )
 					Log.d(TAG, "video_time: " + video_time + " " + time_s);*/
-                p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                 p.setTextAlign(Paint.Align.CENTER);
                 int pixels_offset_y = 2*text_y; // avoid overwriting the zoom
                 int color = Color.rgb(244, 67, 54); // Red 500
@@ -2133,7 +2133,7 @@ public class DrawPreview {
                 if( camera_controller.isCapturingBurst() ) {
                     int n_burst_taken = camera_controller.getNBurstTaken() + 1;
                     int n_burst_total = camera_controller.getBurstTotal();
-                    p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                    p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                     p.setTextAlign(Paint.Align.CENTER);
                     int pixels_offset_y = 2*text_y; // avoid overwriting the zoom
                     if( device_ui_rotation == 0 && applicationInterface.getPhotoMode() == MyApplicationInterface.PhotoMode.FocusBracketing ) {
@@ -2151,7 +2151,7 @@ public class DrawPreview {
                     long exposure_time = camera_controller.getExposureTime();
                     if( exposure_time >= 500000000L ) {
                         if( ((int)(time_ms / 500)) % 2 == 0 ) {
-                            p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                            p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                             p.setTextAlign(Paint.Align.CENTER);
                             int pixels_offset_y = 2*text_y; // avoid overwriting the zoom
                             int color = Color.rgb(244, 67, 54); // Red 500
@@ -2164,7 +2164,7 @@ public class DrawPreview {
                 // still display this message even when preview is paused, to make it clear why user can't take more photos
                 // yet
                 if( ((int)(time_ms / 500)) % 2 == 0 ) {
-                    p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                    p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                     p.setTextAlign(Paint.Align.CENTER);
                     int pixels_offset_y = 2 * text_y; // avoid overwriting the zoom
                     int n_images_to_save = applicationInterface.getImageSaver().getNRealImagesToSave();
@@ -2185,7 +2185,7 @@ public class DrawPreview {
                 //if( zoom_ratio < 1.0f - 1.0e-5f || zoom_ratio > 1.0f + 1.0e-5f ) {
                 if( zoom_ratio < 1.0f - 1.0e-5f || zoom_ratio > 1.1f - 1.0e-5f ) {
                     // Convert the dps to pixels, based on density scale
-                    p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+                    p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
                     p.setTextAlign(Paint.Align.CENTER);
                     applicationInterface.drawTextWithBackground(canvas, p, getContext().getResources().getString(R.string.zoom) + ": " + zoom_ratio +"x", Color.WHITE, Color.BLACK, canvas.getWidth() / 2, text_base_y - text_y, MyApplicationInterface.Alignment.ALIGNMENT_BOTTOM, ybounds_text, MyApplicationInterface.Shadow.SHADOW_OUTLINE);
                 }
@@ -2197,7 +2197,7 @@ public class DrawPreview {
 				Log.d(TAG, "width " + canvas.getWidth() + " height " + canvas.getHeight());
 			}*/
             p.setColor(Color.WHITE);
-            p.setTextSize(14 * scale_font + 0.5f); // convert dps to pixels
+            p.setTextSize(16 * scale_font + 0.5f); // convert dps to pixels (shashinki: 16 sp floor, was 14)
             p.setTextAlign(Paint.Align.CENTER);
             int pixels_offset = (int) (20 * scale_font + 0.5f); // convert dps to pixels
             if( preview.hasPermissions() ) {

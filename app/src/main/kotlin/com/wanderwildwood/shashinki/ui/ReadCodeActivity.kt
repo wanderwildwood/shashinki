@@ -46,7 +46,7 @@ class ReadCodeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val picture = picture(intent)
         setContent {
-            ThemeMMD(colorScheme = monochrome) {
+            ThemeMMD(colorScheme = monochrome, typography = houseTypography) {
               // A blinking cursor in the page-number dialog repaints the panel twice a second.
               CompositionLocalProvider(LocalCursorBlinkEnabled provides false) {
                 // null while reading; then what was found, or why nothing was.
