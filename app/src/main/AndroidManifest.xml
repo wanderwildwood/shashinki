@@ -107,6 +107,7 @@
         <!-- The apps a QR code is handed to, so the camera can tell which are on the phone. -->
         <package android:name="com.wanderwildwood.satsuire" />
         <package android:name="com.wanderwildwood.aikotoba" />
+        <package android:name="com.wanderwildwood.koyomi" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="http" />
@@ -156,6 +157,11 @@
         <intent>
             <action android:name="android.intent.action.INSERT" />
             <data android:mimeType="vnd.android.cursor.dir/raw_contact" />
+        </intent>
+        <!-- A scanned event goes to Datebook, or any calendar that takes "add to calendar". -->
+        <intent>
+            <action android:name="android.intent.action.INSERT" />
+            <data android:mimeType="vnd.android.cursor.dir/event" />
         </intent>
     </queries>
 </manifest>

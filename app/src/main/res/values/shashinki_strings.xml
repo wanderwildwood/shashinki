@@ -74,6 +74,7 @@
     <string name="qr_kind_text">Text message</string>
     <string name="qr_kind_phone">Phone number</string>
     <string name="qr_kind_place">Place</string>
+    <string name="qr_kind_event">Event</string>
     <string name="qr_kind_text_plain">Text</string>
     <string name="qr_kind_product">Product barcode</string>
     <string name="qr_kind_book">Book (ISBN)</string>
@@ -93,6 +94,8 @@
     <string name="qr_copied">Copied</string>
     <string name="qr_save_wallet">Save to Wallet</string>
     <string name="qr_add_passwords">Add to Passwords</string>
+    <string name="qr_add_datebook">Add to Datebook</string>
+    <string name="qr_add_calendar">Add to calendar</string>
     <string name="qr_save_failed">The code could not be handed to Wallet.</string>
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_folder">Folder</string>

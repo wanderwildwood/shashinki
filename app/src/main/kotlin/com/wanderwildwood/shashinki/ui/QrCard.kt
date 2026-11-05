@@ -9,8 +9,10 @@ import android.graphics.Color
 import android.app.SearchManager
 import android.net.Uri
 import android.net.wifi.WifiNetworkSuggestion
+import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.provider.Settings
+import android.text.format.DateUtils
 import android.view.HapticFeedbackConstants
 import android.view.TextureView
 import android.widget.Toast
@@ -55,6 +57,7 @@ import com.google.zxing.client.result.ProductParsedResult
 import com.google.zxing.client.result.ResultParser
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.google.zxing.client.result.AddressBookParsedResult
+import com.google.zxing.client.result.CalendarParsedResult
 import com.google.zxing.client.result.EmailAddressParsedResult
 import com.google.zxing.client.result.GeoParsedResult
 import com.google.zxing.client.result.ParsedResult
@@ -77,8 +80,8 @@ import net.sourceforge.opencamera.R
  * What a code says, put the way a person would say it, and the one thing to do with it.
  *
  * The doing is handed to whichever app on the phone answers it: a web address to the browser,
- * an email to Email, a text to Messaging, a contact to Contacts, a place to a map, a sign-in
- * code to the authenticator. Nothing is opened until the button is pressed.
+ * an email to Email, a text to Messaging, a contact to Contacts, a place to a map, an event to
+ * the calendar, a sign-in code to the authenticator. Nothing is opened until the button is pressed.
  */
 data class Found(
     val raw: String,
@@ -170,11 +173,42 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
             raw, R.string.qr_kind_place, "%.5f, %.5f".format(parsed.latitude, parsed.longitude), R.string.qr_show,
             ifAnyone(Intent(Intent.ACTION_VIEW, Uri.parse(parsed.geoURI))),
         )
+        is CalendarParsedResult -> event(context, raw, parsed)
         // A shop barcode or a book's: the number means nothing read out, so it is looked up.
         is ProductParsedResult -> Found(raw, R.string.qr_kind_product, parsed.normalizedProductID, R.string.qr_look_up, lookUp(context, parsed.normalizedProductID))
         is ISBNParsedResult -> Found(raw, R.string.qr_kind_book, parsed.isbn, R.string.qr_look_up, lookUp(context, "ISBN " + parsed.isbn))
         else -> Found(raw, R.string.qr_kind_text_plain, raw, null, null)
     }
+}
+
+/**
+ * An event: to Datebook's new-event page when it is on the phone, otherwise to whichever calendar
+ * answers "add to calendar". Nothing is saved until the person saves it there.
+ */
+private fun event(context: Context, raw: String, parsed: CalendarParsedResult): Found {
+    val allDay = parsed.isStartAllDay
+    val begin = parsed.startTimestamp
+    // No end in the code: an all-day event lasts its day, anything else ends as it begins.
+    val end = parsed.endTimestamp.takeIf { it >= begin } ?: if (allDay) begin + DateUtils.DAY_IN_MILLIS else begin
+    val add = Intent(Intent.ACTION_INSERT)
+        .setDataAndType(CalendarContract.Events.CONTENT_URI, "vnd.android.cursor.dir/event")
+        .putExtra(CalendarContract.Events.TITLE, parsed.summary.orEmpty())
+        .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin)
+        .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end)
+        .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, allDay)
+        .apply {
+            parsed.location?.takeIf { it.isNotBlank() }?.let { putExtra(CalendarContract.Events.EVENT_LOCATION, it) }
+            parsed.description?.takeIf { it.isNotBlank() }?.let { putExtra(CalendarContract.Events.DESCRIPTION, it) }
+        }
+    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_ALL or
+        (if (allDay) 0 else DateUtils.FORMAT_SHOW_TIME)
+    val shown = listOfNotNull(
+        parsed.summary?.takeIf { it.isNotBlank() },
+        if (begin > 0) DateUtils.formatDateTime(context, begin, flags) else null,
+    ).joinToString("\n").ifEmpty { raw }
+    val datebook = Intent(add).setPackage(DATEBOOK).takeIf { it.resolveActivity(context.packageManager) != null }
+    return if (datebook != null) Found(raw, R.string.qr_kind_event, shown, R.string.qr_add_datebook, datebook)
+    else Found(raw, R.string.qr_kind_event, shown, R.string.qr_add_calendar, add.takeIf { it.resolveActivity(context.packageManager) != null })
 }
 
 /** A web search for [words]: the browser's own if it takes one, otherwise DuckDuckGo in it. */
@@ -463,3 +497,4 @@ private val QR_SIZE = 208.dp
 private const val SHARED_PX = 600
 private const val WALLET = "com.wanderwildwood.satsuire"
 private const val PASSWORDS = "com.wanderwildwood.aikotoba"
+private const val DATEBOOK = "com.wanderwildwood.koyomi"
