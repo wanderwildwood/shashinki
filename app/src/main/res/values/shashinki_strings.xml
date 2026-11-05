@@ -108,6 +108,8 @@
 
     <!-- About. Keep the names of the app, people, projects and licences as they are -->
     <string name="shashinki_about_title">Lens %1$s</string>
+    <!-- The short description at the top of About, no heading -->
+    <string name="shashinki_about_what">Photos and video, laid out as Mudita\'s own camera is, with HDR and Night. QR codes are read as you point, and a code can go to Wallet as a card or to Passwords as a sign-in code.</string>
     <string name="shashinki_about_privacy_title">Privacy</string>
     <string name="shashinki_about_privacy">Everything you photograph or record stays on this phone. The app has no internet access, so nothing is sent anywhere, and nothing is collected about you. It uses the camera to take pictures, the microphone only while a video is recording, and the phone\'s location only if you turn on \"Where a photo was taken\", when the place is written into each photo.</string>
     <!-- The privacy text goes on in a second block, so that no About row is taller than a page -->
@@ -117,12 +119,17 @@
     <string name="shashinki_about_after">Open Camera by Mark Harman is the camera itself: everything here but its face.</string>
     <string name="shashinki_about_feed_the_llamas">Feed the llamas</string>
     <string name="shashinki_about_close">Close</string>
-    <!-- Licenses page, opened from About -->
+    <!-- Licenses drawer in About -->
     <string name="about_licences">Licenses</string>
     <string name="licences_title">Licenses</string>
     <string name="licences_source_head">Source code</string>
     <string name="licences_no_text">%s needs no license text here.</string>
-    <string name="licences_licence">Lens is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own license and its authors keep their copyright, each on its own page.</string>
+    <string name="licences_licence">Lens is free software under the GNU General Public License, version 3 or later (GPL-3.0-or-later), copyright wander wildwood for what is written here, as the work it is built on allows. That work keeps its own license and its authors keep their copyright, listed below.</string>
     <string name="licences_back">Back</string>
     <string name="about_no_browser_address">No browser is installed. The address is %1$s.</string>
+    <string name="about_open_drawer">Open %1$s</string>
+    <string name="about_close_drawer">Close %1$s</string>
+    <string name="about_intro_head">What it does</string>
+    <string name="about_contact_head">Contact</string>
+    <string name="about_links_head">Links</string>
 </resources>
