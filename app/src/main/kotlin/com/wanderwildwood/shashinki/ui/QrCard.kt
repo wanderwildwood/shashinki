@@ -200,8 +200,10 @@ private fun event(context: Context, raw: String, parsed: CalendarParsedResult): 
             parsed.location?.takeIf { it.isNotBlank() }?.let { putExtra(CalendarContract.Events.EVENT_LOCATION, it) }
             parsed.description?.takeIf { it.isNotBlank() }?.let { putExtra(CalendarContract.Events.DESCRIPTION, it) }
         }
+    // ZXing reads an all-day date as UTC midnight, which west of Greenwich is the evening
+    // before, so that date is shown in UTC.
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_ALL or
-        (if (allDay) 0 else DateUtils.FORMAT_SHOW_TIME)
+        (if (allDay) DateUtils.FORMAT_UTC else DateUtils.FORMAT_SHOW_TIME)
     val shown = listOfNotNull(
         parsed.summary?.takeIf { it.isNotBlank() },
         if (begin > 0) DateUtils.formatDateTime(context, begin, flags) else null,
