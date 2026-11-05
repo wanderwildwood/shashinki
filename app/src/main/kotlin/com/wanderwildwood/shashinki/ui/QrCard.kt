@@ -110,7 +110,9 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
     }
     return when (parsed) {
         is URIParsedResult -> {
-            val uri = Uri.parse(parsed.uri)
+            // Android matches schemes case-sensitively, and payment codes are often written in
+            // capitals (BITCOIN:BC1Q...) to keep the QR small, so the scheme is lowercased first.
+            val uri = Uri.parse(parsed.uri).normalizeScheme()
             val scheme = uri.scheme.orEmpty().lowercase()
             val kind = when (scheme) {
                 "http", "https" -> R.string.qr_kind_web
