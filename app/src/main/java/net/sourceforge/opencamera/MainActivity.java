@@ -4432,6 +4432,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         //intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
         startActivityForResult(intent, CHOOSE_SAVE_FOLDER_SAF_CODE);
     }
 
@@ -4445,6 +4446,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
+        intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
         try {
             startActivityForResult(intent, CHOOSE_GHOST_IMAGE_SAF_CODE);
         }
@@ -4465,6 +4467,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("text/xml"); // note that application/xml doesn't work (can't select the xml files)!
+        intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
         try {
             startActivityForResult(intent, CHOOSE_LOAD_SETTINGS_SAF_CODE);
         }

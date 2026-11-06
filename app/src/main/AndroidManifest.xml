@@ -108,6 +108,8 @@
         <package android:name="com.wanderwildwood.satsuire" />
         <package android:name="com.wanderwildwood.aikotoba" />
         <package android:name="com.wanderwildwood.koyomi" />
+        <!-- Files, which answers "choose a folder" and "open a file" on e-ink when it is installed. -->
+        <package android:name="com.wanderwildwood.tana" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="http" />
