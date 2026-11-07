@@ -351,6 +351,7 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
             Modifier.fillMaxSize().padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 12.dp),
+            showCutRow = true,
         ) {
             item { Spacer(Modifier.height(8.dp)) }
             if (drawn != null) {
