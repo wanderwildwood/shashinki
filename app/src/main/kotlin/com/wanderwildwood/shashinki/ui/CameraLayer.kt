@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.view.View
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -291,6 +292,10 @@ object CameraLayer {
             val bars = ((BAR + STRIP).value * activity.resources.displayMetrics.density).toInt()
             root.setPadding(0, 0, 0, bars)
         }
+        // The viewfinder keeps the size Open Camera gives it and is only moved, so its sizing,
+        // focus and touches are untouched. Its layout settles after the camera opens, so this is
+        // worked out again each time it does.
+        preview.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> place(activity) }
 
         val layer = ComposeView(activity).apply {
             setContent {
@@ -314,10 +319,31 @@ object CameraLayer {
      * Read the camera's state again. Called by Open Camera wherever its own shutter icon would
      * have changed — the camera opening, video starting or stopping, the mode switching.
      */
+    /**
+     * Put the viewfinder in the middle of the space above the bars, shrunk if it would not fit
+     * there. Open Camera centres it on the whole screen, which on the Kompakt left a black strip
+     * above it and hid as much again under the bars.
+     */
+    private fun place(activity: MainActivity) {
+        val frame = activity.findViewById<ViewGroup>(R.id.preview) ?: return
+        val root = frame.parent as? ViewGroup ?: return
+        val width = root.width - root.paddingLeft - root.paddingRight
+        val height = root.height - root.paddingTop - root.paddingBottom
+        if (frame.width <= 0 || frame.height <= 0 || width <= 0 || height <= 0) return
+        val scale = minOf(width.toFloat() / frame.width, height.toFloat() / frame.height, 1f)
+        val dx = root.paddingLeft + width / 2f - (frame.left + frame.width / 2f)
+        val dy = root.paddingTop + height / 2f - (frame.top + frame.height / 2f)
+        if (frame.scaleX != scale) frame.scaleX = scale
+        if (frame.scaleY != scale) frame.scaleY = scale
+        if (frame.translationX != dx) frame.translationX = dx
+        if (frame.translationY != dy) frame.translationY = dy
+    }
+
     @JvmStatic
     fun refresh() {
         val activity = host.get() ?: return
         val preview = activity.preview ?: return
+        place(activity)
         // Posted, not called: this runs inside Open Camera's own camera-opening code.
         if (!preview.isVideoRecording && Defaults.fullFrameOnce(activity)) {
             Handler(Looper.getMainLooper()).post { activity.updateForSettings(true) }
@@ -779,14 +805,18 @@ private fun Aim(activity: MainActivity) {
         var cy = size.height / 2
         var w = size.width
         var h = size.height
+        // Shrunk to fit by [place]: the window position already counts that, the view's own
+        // size does not.
+        val grown = (view?.parent as? View)?.scaleX ?: 1f
+        var side = QrReader.aim(w.toInt(), h.toInt()).toFloat()
         if (view != null && view.width > 0 && view.height > 0) {
             val at = IntArray(2).also { view.getLocationInWindow(it) }
-            cx = at[0] - origin.x + view.width / 2f
-            cy = at[1] - origin.y + view.height / 2f
+            cx = at[0] - origin.x + view.width * grown / 2f
+            cy = at[1] - origin.y + view.height * grown / 2f
             w = view.width.toFloat()
             h = view.height.toFloat()
+            side = QrReader.aim(w.toInt(), h.toInt()) * grown
         }
-        val side = QrReader.aim(w.toInt(), h.toInt()).toFloat()
         val left = cx - side / 2
         val top = cy - side / 2
         val arm = side / 6
