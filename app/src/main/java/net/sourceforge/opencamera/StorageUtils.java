@@ -1787,15 +1787,44 @@ public class StorageUtils {
                 // Update: on Galaxy S10e with Android 11 at least, no longer seem to have problems with RAW, but leave
                 // the check for is_raw just in case for older devices.
 
-                // shashinki: our own Gallery first, when it is installed.
+                // shashinki: Pictures first, when it is installed, on the photo or video itself.
+                // With no photo of this app's to show (none taken yet, or a fresh install that no
+                // longer owns the older ones) Android is left the folder of all pictures, which
+                // Pictures does not take as something to review: so Pictures is opened at its
+                // start, rather than the folder going on to whichever gallery answers it.
+                String type = null;
                 try {
-                    Intent intent = new Intent(MediaStore.ACTION_REVIEW, uri);
+                    type = context.getContentResolver().getType(uri);
+                }
+                catch(RuntimeException e) {
+                    // no type known: treated as no single photo
+                }
+                final boolean item = type != null && ( type.startsWith("image/") || type.startsWith("video/") );
+                try {
+                    Intent intent = item ?
+                            new Intent(MediaStore.ACTION_REVIEW).setDataAndType(uri, type) :
+                            new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);
                     intent.setPackage("com.wanderwildwood.garo");
                     context.startActivity(intent);
                     done = true;
                 }
                 catch(RuntimeException e) {
-                    // not installed: ask Android for any gallery, as before
+                    // not installed: the phone's own choice below
+                }
+                // Without Pictures: what the phone opens a photo or video with, or for no single
+                // one its gallery. The older "review" requests below went to whichever app
+                // answered them, on a Kompakt a plain gallery rather than Mudita's own.
+                if( !done ) {
+                    try {
+                        Intent intent = item ?
+                                new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type) :
+                                Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY);
+                        context.startActivity(intent);
+                        done = true;
+                    }
+                    catch(RuntimeException e) {
+                        // nothing answers: the older requests below, as upstream asks them
+                    }
                 }
 
                 if( !done && preference_gallery.equals("preference_gallery_include_legacy") ) {
