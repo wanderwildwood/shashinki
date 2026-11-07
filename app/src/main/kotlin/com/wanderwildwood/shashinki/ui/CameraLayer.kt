@@ -90,6 +90,8 @@ object CameraLayer {
     data class Snapshot(
         val flash: String? = null,
         val hasFlash: Boolean = false,
+        /** The flash can stay lit, which is all a flash does for video. */
+        val hasTorch: Boolean = false,
         val video: Boolean = false,
         val recording: Boolean = false,
         val onTimer: Boolean = false,
@@ -356,6 +358,7 @@ object CameraLayer {
         snapshot = Snapshot(
             flash = preview.currentFlashValue,
             hasFlash = preview.supportsFlash(),
+            hasTorch = preview.supportedFlashValues?.contains("flash_torch") == true,
             video = preview.isVideo,
             recording = preview.isVideoRecording,
             onTimer = preview.isOnTimer,
@@ -679,7 +682,10 @@ private fun Camera(activity: MainActivity) {
                 activity.clickedTakePhoto(null)
                 CameraLayer.refresh()
             }
-            if (shot.hasFlash && !shot.video) {
+            // In video the flash is the torch or nothing, to film by in the dark: Open Camera's
+            // own cycle passes over automatic there, so the press goes off, on, off. It stays
+            // while recording, so the light can be put on or off mid-video.
+            if (shot.hasFlash && (!shot.video || shot.hasTorch)) {
                 Ring(
                     icon = when (shot.flash) {
                         "flash_torch" -> Icons.FlashOn
