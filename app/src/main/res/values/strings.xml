@@ -78,7 +78,7 @@
     <string name="preference_color_effect">Apply a color effect</string>
     <string name="preference_color_effect_summary">Applies the selected color effect to the photo</string>
     <string name="preference_scene_mode">Apply a scene mode</string>
-    <string name="preference_scene_mode_summary">Optimise the photo for different scenes</string>
+    <string name="preference_scene_mode_summary">Optimize the photo for different scenes</string>
     <string name="preference_white_balance">Set the white balance</string>
     <string name="preference_white_balance_summary">Choose a setting to adjust the white balance</string>
     <string name="preference_iso">Set the ISO</string>
@@ -397,7 +397,7 @@
 
     <string name="capturing">Capturing…</string>
 
-    <string name="audio_listener_failed">Failed to initalise audio listening</string>
+    <string name="audio_listener_failed">Failed to initialize audio listening</string>
     <string name="failed_to_process_hdr">Failed to create HDR image</string>
 
     <string name="white_balance_auto">Auto</string>
@@ -425,7 +425,7 @@
     <string name="scene_mode_sports">Sports</string>
     <string name="scene_mode_steady_photo">Steady photo</string>
     <string name="scene_mode_sunset">Sunset</string>
-    <string name="scene_mode_theatre">Theatre</string>
+    <string name="scene_mode_theatre">Theater</string>
 
     <string name="color_effect_aqua">Aqua</string>
     <string name="color_effect_blackboard">Blackboard</string>
@@ -531,8 +531,8 @@
     <string name="open_files_saf_exception_ghost">No file dialog found on this device, ghost image option is not supported</string>
     <string name="saf_permission_failed_open_image">Unable to open this image</string>
 
-    <string name="preference_camera2_photo_video_recording">Allow photos whilst recording video</string>
-    <string name="preference_camera2_photo_video_recording_summary">Allows taking photos whilst recording videos. Disable this if there are problems with video recording with Camera2 API enabled on your device.</string>
+    <string name="preference_camera2_photo_video_recording">Allow photos while recording video</string>
+    <string name="preference_camera2_photo_video_recording_summary">Allows taking photos while recording videos. Disable this if there are problems with video recording with Camera2 API enabled on your device.</string>
 
     <string name="preference_video_log">Video picture profiles</string>
     <string name="preference_video_log_summary">Set standard or flat picture profile for video mode\n%s</string>
@@ -547,8 +547,8 @@
     <string name="preference_record_audio_src_camcorder">Camcorder</string>
     <string name="preference_record_audio_src_mic">External mic (if present)</string>
     <string name="preference_record_audio_src_default">Default audio source</string>
-    <string name="preference_record_audio_src_voice_communication">Optimised for voice calls</string>
-    <string name="preference_record_audio_src_voice_recognition">Optimised for voice recognition</string>
+    <string name="preference_record_audio_src_voice_communication">Optimized for voice calls</string>
+    <string name="preference_record_audio_src_voice_recognition">Optimized for voice recognition</string>
     <string name="preference_record_audio_src_unprocessed">Unprocessed</string>
 
     <string name="preference_video_bitrate_default">Default</string>
@@ -1014,8 +1014,8 @@
     <string name="focus_peaking_enable">Enable focus peaking</string> <!-- for "ContentDescription" (used for accessibility, e.g., Google Talkback) -->
     <string name="focus_peaking_disable">Disable focus peaking</string> <!-- for "ContentDescription" (used for accessibility, e.g., Google Talkback) -->
 
-    <string name="preference_photo_optimise_focus">Optimise focus for…</string>
-    <string name="preference_photo_optimise_focus_summary">When taking photos, whether to optimize for latency or quality. Only relevant when using continuous focus mode. Optimising for quality ensures that the scene is focused, but may result in a delay in taking photos.\n%s</string>
+    <string name="preference_photo_optimise_focus">Optimize focus for…</string>
+    <string name="preference_photo_optimise_focus_summary">When taking photos, whether to optimize for latency or quality. Only relevant when using continuous focus mode. Optimizing for quality ensures that the scene is focused, but may result in a delay in taking photos.\n%s</string>
     <string name="preference_photo_optimise_focus_latency">Latency</string>
     <string name="preference_photo_optimise_focus_quality">Quality</string>
 

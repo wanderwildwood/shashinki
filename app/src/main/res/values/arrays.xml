@@ -72,7 +72,7 @@
         <item>300</item>
     </string-array>
     <string-array name="preference_preview_size_entries">
-        <item>Maximise preview size</item>
+        <item>Maximize preview size</item>
         <item>Match photo size (WYSIWYG)</item>
     </string-array>
     <string-array name="preference_preview_size_values">
