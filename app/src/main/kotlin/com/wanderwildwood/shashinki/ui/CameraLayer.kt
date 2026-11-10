@@ -13,6 +13,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -602,14 +603,13 @@ private fun Camera(activity: MainActivity) {
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(start = 11.dp),
         ) {
-            Mode(stringResource(R.string.shashinki_photo), chosen = !shot.video, enabled = !shot.recording) {
+            Mode(stringResource(R.string.shashinki_photo), chosen = !shot.video, enabled = !shot.recording, stone = true) {
                 if (shot.video) {
                     activity.clickedSwitchVideo(null)
                     CameraLayer.refresh()
                 }
             }
-            TextMMD(text = "·", style = MaterialTheme.typography.bodyMedium)
-            Mode(stringResource(R.string.shashinki_video), chosen = shot.video, enabled = !shot.recording) {
+            Mode(stringResource(R.string.shashinki_video), chosen = shot.video, enabled = !shot.recording, stone = true) {
                 if (!shot.video) {
                     activity.clickedSwitchVideo(null)
                     CameraLayer.refresh()
@@ -710,22 +710,31 @@ private fun Camera(activity: MainActivity) {
 }
 
 @Composable
-private fun Mode(label: String, chosen: Boolean, enabled: Boolean, toggle: Boolean = false, onClick: () -> Unit) {
-    TextMMD(
-        text = label,
-        style = MaterialTheme.typography.bodyMedium,
-        fontWeight = if (chosen) FontWeight.Bold else null,
+private fun Mode(label: String, chosen: Boolean, enabled: Boolean, toggle: Boolean = false, stone: Boolean = false, onClick: () -> Unit) {
+    // Photo and video are one choice, so the chosen one has nothing to do; HDR and Night
+    // are each on or off, so pressing the chosen one turns it off.
+    // [stone]: the chosen one is a black stone with its label in white, as StoneTabs draws a
+    // chosen tab. Bold alone did not say clearly enough which of Photo and Video was on
+    // (t/15807 #22).
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
-            // Photo and video are one choice, so the chosen one has nothing to do; HDR and Night
-            // are each on or off, so pressing the chosen one turns it off.
             .heightIn(min = 48.dp)
             .widthIn(min = 48.dp)
-            .clickable(enabled = enabled && (toggle || !chosen), onClick = onClick)
-            .padding(horizontal = 5.dp)
-            .wrapContentHeight(Alignment.CenterVertically),
-        maxLines = 1,
-        softWrap = false,
-    )
+            .clickable(enabled = enabled && (toggle || !chosen), onClick = onClick),
+    ) {
+        TextMMD(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (chosen || stone) FontWeight.Bold else null,
+            color = if (stone && chosen) Color.White else Color.Unspecified,
+            modifier = Modifier
+                .then(if (stone && chosen) Modifier.background(Color.Black, RoundedCornerShape(4.dp)) else Modifier)
+                .padding(horizontal = if (stone) 8.dp else 5.dp, vertical = if (stone) 6.dp else 0.dp),
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
 }
 
 /** A 48dp press with a 22dp glyph, the size every top bar in this shop uses. */
