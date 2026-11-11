@@ -1,6 +1,4 @@
-# Lens
-
-写真機 *shashinki*
+# 写真機 shashinki — Lens
 
 Photos and video on an E Ink phone, with the camera's own face kept out of the way: the
 viewfinder, and below it the last picture, the shutter and the flash.
