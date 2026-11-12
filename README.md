@@ -4,7 +4,7 @@ Photos and video on an E Ink phone, with the camera's own face kept out of the w
 viewfinder, and below it the last picture, the shutter and the flash.
 
 Built for the [Mudita Kompakt](https://mudita.com/products/kompakt/), whose 4.3" panel has
-sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
+sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
 [Open Camera](https://opencamera.org.uk) underneath.
 
 ## Screenshots
@@ -30,7 +30,7 @@ sixteen greys, a slow redraw, and is read outdoors as often as indoors. It is
   a steady light, lit from the moment it is chosen, so the picture can be framed by it.
 - **Tap the viewfinder** to focus there; pinch to zoom.
 - **Codes are read as you point at them**, with no photo to take. The camera hands the reader
-  its own grey copy of the picture, sharper than this screen can show, one frame after another
+  its own gray copy of the picture, sharper than this screen can show, one frame after another
   as fast as they read. A QR code anywhere in the picture is focused on as soon as it is seen,
   and a square comes up over the middle of the viewfinder to aim with; a code in the square
   reads even when it is small, and the square also reads Data Matrix, Aztec and PDF417 codes
@@ -84,7 +84,7 @@ would have. What is new is a Jetpack Compose layer over the viewfinder, built wi
 
 The changes to Open Camera's own code are small and each marked `shashinki`: the overlay
 draws nothing, its sixty-a-second redraw is off, a few hooks let the new layer start and know
-when the camera's state changes, and the camera's preview gains one more output, the grey copy
+when the camera's state changes, and the camera's preview gains one more output, the gray copy
 the code reader reads, made only for a plain photo session while reading is on. The first commit of this
 repository is Open Camera exactly as upstream has it, so `git diff d084757` shows all of it.
 
@@ -110,7 +110,7 @@ License 2.0. Codes are read by [ZXing](https://github.com/zxing/zxing), Apache L
 reading them — the middle square at the camera's own sharpness, frame after frame — follows
 [QR & Barcode Scanner](https://github.com/wewewe718/QrAndBarcodeScanner) by wewewe718 (The Unlicense).
 
-The app's own **Licences** page (About) lists the app and then every library it is built with, one row each; a row opens the author, website and full licence text, and the app's own page carries the source address and the GPL, so none of it depends on this repository.
+The app's own **Licenses** page (About) lists the app and then every library it is built with, one row each; a row opens the author, website and full license text, and the app's own page carries the source address and the GPL, so none of it depends on this repository.
 
 ## Getting it, and keeping it
 
@@ -123,7 +123,7 @@ For updates without doing this by hand, add this repository to
 
     https://github.com/wanderwildwood/shashinki
 
-## Licence
+## License
 
 GNU General Public License v3 or later, as Open Camera is. See [LICENSE](LICENSE).
 
