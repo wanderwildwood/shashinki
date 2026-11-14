@@ -19,6 +19,8 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
   the shutter is a square and the line says so; there is no running clock.
 - **The last picture** opens in Pictures (画廊 garō), inside its folder, whenever Pictures is
   installed, even if another gallery is the phone's default; otherwise in the phone's gallery.
+  In settings the same button can instead open the newest picture in a folder you pick, such
+  as Screenshots.
 - **Shadows, HDR and Night**, on the same line. One press of Shadows brightens the dark parts
   of a single shot (Open Camera's DRO), so it is as quick as a plain photo and fine handheld,
   with nothing to line up. A second press shows HDR, which joins three exposures so a bright sky

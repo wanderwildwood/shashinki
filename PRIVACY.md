@@ -34,6 +34,12 @@ on a code the camera has read, the code is drawn as a picture and kept in the ap
 (one file, replaced by the next); it is handed only to Wallet. Nothing else is written except the
 settings, in the app's own preferences.
 
+If you choose a folder for the gallery button in settings, you choose it on the phone's own
+"choose a folder" screen, and Android lets Lens read that one folder. Lens looks only at the
+names, kinds and dates of the files directly in it, to find the newest picture, and hands that
+picture to your gallery app. It asks for no storage permission and keeps only the folder's
+address.
+
 ## Outside services
 
 Lens itself talks to no one. Two buttons hand something to another app, and only when pressed:

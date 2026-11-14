@@ -98,6 +98,10 @@
     <string name="qr_add_calendar">Add to calendar</string>
     <string name="qr_save_failed">The code could not be handed to Wallet.</string>
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
+    <string name="shashinki_gallery_button">Gallery button opens</string>
+    <string name="shashinki_gallery_last">The last picture</string>
+    <string name="shashinki_gallery_pick">A folder you pick</string>
+    <string name="shashinki_gallery_folder">The newest picture in %1$s</string>
     <string name="shashinki_folder">Folder</string>
     <string name="shashinki_folder_note">Under DCIM on the phone. A name only.</string>
     <string name="shashinki_folder_empty">The folder needs a name.</string>

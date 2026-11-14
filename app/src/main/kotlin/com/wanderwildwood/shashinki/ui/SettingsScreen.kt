@@ -73,6 +73,16 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     var aboutOpen by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf<Pick?>(null) }
     var folderOpen by remember { mutableStateOf(false) }
+    var galleryOpen by remember { mutableStateOf(false) }
+    // The phone's "choose a folder" screen (Files when it is installed); a folder comes back, or nothing.
+    val pickGalleryFolder = androidx.activity.compose.rememberLauncherForActivityResult(FilesOpenTree()) { tree ->
+        if (tree != null) {
+            GalleryFolder.choose(activity, tree)
+            changed()
+        }
+    }
+
+    val galleryFolder = remember(version) { GalleryFolder.tree(activity) }
 
     // The camera is closed while this is open, so what it offered is what it offered as it closed.
     val info = CameraLayer.panelInfo
@@ -228,6 +238,14 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                     onClick = { folderOpen = true },
                 )
             }
+            item {
+                Setting(
+                    title = stringResource(R.string.shashinki_gallery_button),
+                    value = galleryFolder?.let { stringResource(R.string.shashinki_gallery_folder, GalleryFolder.name(it)) }
+                        ?: stringResource(R.string.shashinki_gallery_last),
+                    onClick = { galleryOpen = true },
+                )
+            }
         }
     }
 
@@ -271,6 +289,26 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             )
         }
         null -> Unit
+    }
+
+    if (galleryOpen) {
+        PickDialog(
+            title = stringResource(R.string.shashinki_gallery_button),
+            options = listOf(
+                stringResource(R.string.shashinki_gallery_last),
+                galleryFolder?.let { GalleryFolder.name(it) } ?: stringResource(R.string.shashinki_gallery_pick),
+            ) + if (galleryFolder != null) listOf(stringResource(R.string.shashinki_gallery_pick)) else emptyList(),
+            chosen = if (galleryFolder == null) 0 else 1,
+            onChoose = { i ->
+                galleryOpen = false
+                when {
+                    i == 0 -> { GalleryFolder.choose(activity, null); changed() }
+                    galleryFolder != null && i == 1 -> Unit // the folder in use: stays
+                    else -> pickGalleryFolder.launch(null)
+                }
+            },
+            onDismiss = { galleryOpen = false },
+        )
     }
 
     if (folderOpen) {

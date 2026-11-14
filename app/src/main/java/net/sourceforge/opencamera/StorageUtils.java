@@ -1706,16 +1706,34 @@ public class StorageUtils {
     }
 
     void openGallery() {
+        // shashinki: with a folder chosen in settings the button opens the newest picture in it,
+        // rather than the last one taken. The folder is listed off the main thread.
+        final Uri folder = com.wanderwildwood.shashinki.ui.GalleryFolder.tree(context);
+        if( folder != null ) {
+            new Thread(() -> {
+                final com.wanderwildwood.shashinki.ui.GalleryFolder.Found found =
+                        com.wanderwildwood.shashinki.ui.GalleryFolder.newest(context, folder);
+                ((MainActivity)context).runOnUiThread(() -> openGallery(true, found));
+            }).start();
+            return;
+        }
+        openGallery(false, null);
+    }
+
+    /** @param in_folder Whether a folder is chosen for the gallery button; then found is the
+     *                   newest picture in it, or null when it has none (the gallery itself opens).
+     */
+    private void openGallery(final boolean in_folder, final com.wanderwildwood.shashinki.ui.GalleryFolder.Found found) {
         if( MyDebug.LOG )
             Log.d(TAG, "openGallery");
         //Intent intent = new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        Uri uri = getLastMediaScanned();
-        boolean is_raw = uri != null && getLastMediaScannedIsRaw();
+        Uri uri = in_folder ? ( found != null ? found.uri : null ) : getLastMediaScanned();
+        boolean is_raw = !in_folder && uri != null && getLastMediaScannedIsRaw();
         if( MyDebug.LOG && uri != null ) {
             Log.d(TAG, "found cached most recent uri: " + uri);
             Log.d(TAG, "    is_raw: " + is_raw);
         }
-        if( uri == null ) {
+        if( uri == null && !in_folder ) {
             if( MyDebug.LOG )
                 Log.d(TAG, "go to latest media");
             StorageUtils.Media media = getLatestMedia();
@@ -1733,7 +1751,7 @@ public class StorageUtils {
             }
         }
 
-        if( uri != null && !MainActivity.useScopedStorage() ) {
+        if( uri != null && !in_folder && !MainActivity.useScopedStorage() ) {
             // check uri exists
             // note, with scoped storage this isn't reliable when using SAF - since we don't actually have permission to access mediastore URIs that
             // were created via Storage Access Framework, even though Open Camera was the application that saved them(!)
@@ -1792,17 +1810,21 @@ public class StorageUtils {
                 // longer owns the older ones) Android is left the folder of all pictures, which
                 // Pictures does not take as something to review: so Pictures is opened at its
                 // start, rather than the folder going on to whichever gallery answers it.
-                String type = null;
-                try {
-                    type = context.getContentResolver().getType(uri);
-                }
-                catch(RuntimeException e) {
-                    // no type known: treated as no single photo
+                String type = found != null ? found.type : null; // shashinki: a chosen folder's picture comes with its type
+                if( type == null ) {
+                    try {
+                        type = context.getContentResolver().getType(uri);
+                    }
+                    catch(RuntimeException e) {
+                        // no type known: treated as no single photo
+                    }
                 }
                 final boolean item = type != null && ( type.startsWith("image/") || type.startsWith("video/") );
+                // A picture known only by its place in the chosen folder is lent to the gallery to read.
+                final int lend = found != null && found.lend ? Intent.FLAG_GRANT_READ_URI_PERMISSION : 0;
                 try {
                     Intent intent = item ?
-                            new Intent(MediaStore.ACTION_REVIEW).setDataAndType(uri, type) :
+                            new Intent(MediaStore.ACTION_REVIEW).setDataAndType(uri, type).addFlags(lend) :
                             new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);
                     intent.setPackage("com.wanderwildwood.garo");
                     context.startActivity(intent);
@@ -1817,7 +1839,7 @@ public class StorageUtils {
                 if( !done ) {
                     try {
                         Intent intent = item ?
-                                new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type) :
+                                new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type).addFlags(lend) :
                                 Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY);
                         context.startActivity(intent);
                         done = true;
