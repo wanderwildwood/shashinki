@@ -761,7 +761,7 @@ private fun Ring(icon: ImageVector, description: String, enabled: Boolean, pictu
                 bitmap = remember(picture) { picture.asImageBitmap() },
                 contentDescription = description,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize().clip(CircleShape),
+                modifier = Modifier.matchParentSize().clip(CircleShape).keepColors(),
             )
         } else {
             Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))

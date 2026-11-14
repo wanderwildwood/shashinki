@@ -363,7 +363,7 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
                             contentScale = ContentScale.Fit,
                             // Whole pixels, so every module stays black or white on the panel.
                             filterQuality = FilterQuality.None,
-                            modifier = Modifier.size(QR_SIZE),
+                            modifier = Modifier.size(QR_SIZE).keepColors(),
                         )
                     }
                 }

@@ -495,6 +495,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         scaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleListener());
 
         parent.addView(cameraSurface.getView());
+        // shashinki: the viewfinder is a picture; it keeps its colours in dark mode (a SurfaceView is not touched)
+        if( cameraSurface.getView() instanceof TextureView ) {
+            com.wanderwildwood.shashinki.ui.DarkMode.INSTANCE.keep(cameraSurface.getView());
+        }
         if( canvasView != null ) {
             parent.addView(canvasView);
         }
