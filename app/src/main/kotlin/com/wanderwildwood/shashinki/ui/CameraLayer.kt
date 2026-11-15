@@ -135,6 +135,14 @@ object CameraLayer {
      */
     internal var newest by mutableStateOf<Bitmap?>(null)
 
+    /**
+     * The black round the viewfinder. The camera draws outside dark mode's filter, so in dark
+     * mode the black is asked for as white, which the filter turns back to black; otherwise the
+     * viewfinder sits in a white frame.
+     */
+    @JvmStatic
+    fun surround(): Int = if (DarkMode.on) android.graphics.Color.WHITE else android.graphics.Color.BLACK
+
     @JvmStatic
     fun thumbnail(bitmap: Bitmap?) {
         Handler(Looper.getMainLooper()).post { newest = bitmap }
@@ -460,6 +468,11 @@ object CameraLayer {
 private fun Camera(activity: MainActivity) {
     var settingsOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val shot = CameraLayer.snapshot
+    // Dark mode switched while the camera is up: the surround follows it.
+    val dark = DarkMode.on
+    androidx.compose.runtime.SideEffect {
+        activity.window.decorView.rootView.setBackgroundColor(if (dark) android.graphics.Color.WHITE else android.graphics.Color.BLACK)
+    }
 
     if (settingsOpen) {
         // The camera is closed while this covers it, and opened again, on the settings as they

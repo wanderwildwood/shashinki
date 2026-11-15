@@ -1321,7 +1321,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
 
         // Set black window background; also needed if we hide the virtual buttons in immersive mode
         // Note that we do it here rather than customising the theme's android:windowBackground, so this doesn't affect other views - in particular, the MyPreferenceFragment settings
-        getWindow().getDecorView().getRootView().setBackgroundColor(Color.BLACK);
+        getWindow().getDecorView().getRootView().setBackgroundColor(com.wanderwildwood.shashinki.ui.CameraLayer.surround()); // shashinki: black in dark mode too
 
         if( edge_to_edge_mode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM ) {
             // needed on Android 15, otherwise the navigation bar is not transparent
