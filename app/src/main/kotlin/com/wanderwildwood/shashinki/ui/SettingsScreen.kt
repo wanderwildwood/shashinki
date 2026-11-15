@@ -47,6 +47,11 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 
 /**
  * Eight of Open Camera's 177 settings, and reading QR codes: the ones that change what a photo or a video is, or what
@@ -371,7 +376,7 @@ private fun Setting(title: String, value: String, note: String? = null, onClick:
 private fun Toggle(title: String, on: Boolean, note: String? = null, onChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().clickable { onChange(!on) }.padding(vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().semantics { role = Role.Switch; toggleableState = ToggleableState(on) }.clickable { onChange(!on) }.padding(vertical = 14.dp),
     ) {
         Column(Modifier.weight(1f)) {
             TextMMD(text = title, style = MaterialTheme.typography.bodyMedium)
