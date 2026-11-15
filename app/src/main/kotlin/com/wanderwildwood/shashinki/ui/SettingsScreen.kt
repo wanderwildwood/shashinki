@@ -42,6 +42,11 @@ import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
 import net.sourceforge.opencamera.MainActivity
 import net.sourceforge.opencamera.PreferenceKeys
 import net.sourceforge.opencamera.R
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 
 /**
  * Eight of Open Camera's 177 settings, and reading QR codes: the ones that change what a photo or a video is, or what
@@ -415,6 +420,7 @@ private fun FolderDialog(initial: String, onSave: (String) -> Unit, onDismiss: (
     val ok = folderNameOk(name)
     // Saving a name that cannot be used says why and keeps the dialog; a greyed Save only said no.
     var refused by remember { mutableStateOf(false) }
+    val field = remember { FocusRequester() }
     val save = {
         if (ok) {
             onSave(name)
@@ -425,13 +431,22 @@ private fun FolderDialog(initial: String, onSave: (String) -> Unit, onDismiss: (
     }
     EInkDialog(onDismiss = onDismiss) {
         TextMMD(text = stringResource(R.string.shashinki_folder), style = MaterialTheme.typography.bodyLarge)
+        // The field is what the dialog is for: it takes the focus as it opens and the keyboard
+        // comes up. Asked from inside the dialog, a frame after it is drawn: the field lives in
+        // the dialog's own window, which a request from the screen beneath does not reach.
+        val keyboardNow = LocalSoftwareKeyboardController.current
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            runCatching { field.requestFocus() }
+            keyboardNow?.show()
+        }
         Spacer(Modifier.height(6.dp))
         TextMMD(text = stringResource(R.string.shashinki_folder_note), style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
         TextFieldMMD(
             value = value,
             onValueChange = { value = it; refused = false },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(field),
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
             keyboardActions = KeyboardActions(onDone = { save() }),
