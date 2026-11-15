@@ -1718,6 +1718,13 @@ public class StorageUtils {
             new Thread(() -> {
                 final com.wanderwildwood.shashinki.ui.GalleryFolder.Found found =
                         com.wanderwildwood.shashinki.ui.GalleryFolder.newest(context, folder);
+                // A folder that cannot be read now (deleted, or the right to read it taken back)
+                // is said in the viewfinder, with where to choose it again, rather than the
+                // gallery opening somewhere else as if nothing were wrong. The choice is kept.
+                if( found == null && !com.wanderwildwood.shashinki.ui.GalleryFolder.canRead(context, folder) ) {
+                    com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.shashinki_gallery_folder_gone);
+                    return;
+                }
                 ((MainActivity)context).runOnUiThread(() -> openGallery(true, found));
             }).start();
             return;
@@ -1892,7 +1899,7 @@ public class StorageUtils {
                     MyDebug.logStackTrace(TAG, "failed to start ACTION_VIEW intent", e);
                     // The camera's own toasts are switched off, so say it plainly with a system one:
                     // a tap on the gallery thumbnail must never end in nothing, or in a crash.
-                    android.widget.Toast.makeText(context, R.string.no_gallery_app, android.widget.Toast.LENGTH_LONG).show();
+                    com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.no_gallery_app); // shashinki: said in the viewfinder until the next photo, not a toast that goes
                 }
             }
         }

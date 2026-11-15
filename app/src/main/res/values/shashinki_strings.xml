@@ -103,6 +103,10 @@
     <string name="shashinki_gallery_all">All pictures</string>
     <string name="shashinki_gallery_pick">A folder you pick</string>
     <string name="shashinki_gallery_folder">The newest picture in %1$s</string>
+    <!-- Settings, the gallery button's row: the chosen folder (%1$s) can no longer be read -->
+    <string name="shashinki_gallery_folder_unreadable">%1$s cannot be read now. Choose the folder again.</string>
+    <!-- Said in the viewfinder when the gallery button's chosen folder can no longer be read -->
+    <string name="shashinki_gallery_folder_gone">The gallery button\'s folder cannot be read now: it may have been deleted. Choose the folder again in Settings.</string>
     <string name="shashinki_folder">Folder</string>
     <string name="shashinki_folder_note">Under DCIM on the phone. A name only.</string>
     <string name="shashinki_folder_empty">The folder needs a name.</string>

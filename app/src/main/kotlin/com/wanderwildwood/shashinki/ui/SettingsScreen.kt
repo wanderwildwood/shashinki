@@ -94,6 +94,11 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
 
     val galleryFolder = remember(version) { GalleryFolder.tree(activity) }
     val galleryAll = remember(version) { GalleryFolder.all(activity) }
+    // A chosen folder that can no longer be read says so here, and choosing it picks it again.
+    val galleryReadable by androidx.compose.runtime.produceState(true, galleryFolder) {
+        value = galleryFolder == null ||
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { GalleryFolder.canRead(activity, galleryFolder) }
+    }
 
     // The camera is closed while this is open, so what it offered is what it offered as it closed.
     val info = CameraLayer.panelInfo
@@ -252,7 +257,12 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             item {
                 Setting(
                     title = stringResource(R.string.shashinki_gallery_button),
-                    value = galleryFolder?.let { stringResource(R.string.shashinki_gallery_folder, GalleryFolder.name(it)) }
+                    value = galleryFolder?.let {
+                        stringResource(
+                            if (galleryReadable) R.string.shashinki_gallery_folder else R.string.shashinki_gallery_folder_unreadable,
+                            GalleryFolder.name(it),
+                        )
+                    }
                         ?: stringResource(if (galleryAll) R.string.shashinki_gallery_all else R.string.shashinki_gallery_last),
                     onClick = { galleryOpen = true },
                 )
@@ -320,7 +330,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 when {
                     i == 0 -> { GalleryFolder.chooseAll(activity, false); GalleryFolder.choose(activity, null); changed() }
                     i == 1 -> { GalleryFolder.chooseAll(activity, true); changed() }
-                    galleryFolder != null && i == 2 -> Unit // the folder in use: stays
+                    galleryFolder != null && i == 2 && galleryReadable -> Unit // the folder in use: stays
                     else -> pickGalleryFolder.launch(null)
                 }
             },

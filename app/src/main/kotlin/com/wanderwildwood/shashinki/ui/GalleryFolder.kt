@@ -83,6 +83,24 @@ object GalleryFolder {
         return path.trimEnd('/').substringAfterLast('/').ifEmpty { documentId.orEmpty().substringBefore(':') }
     }
 
+    /**
+     * Whether [tree] can still be read: the phone still lets this app in, and the folder still
+     * answers. False once it has been deleted, its card taken out, or the right to read it taken
+     * back. Asks the folder, so not for the main thread.
+     */
+    @JvmStatic
+    fun canRead(context: Context, tree: Uri): Boolean {
+        val resolver = context.contentResolver
+        if (resolver.persistedUriPermissions.none { it.uri == tree && it.isReadPermission }) return false
+        return try {
+            val top = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+            resolver.query(top, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID), null, null, null)
+                ?.use { it.moveToFirst() } == true
+        } catch (e: RuntimeException) {
+            false
+        }
+    }
+
     /** Of (id, type, modified) rows, the newest picture or video; null when there is none. */
     internal fun newestOf(rows: List<Triple<String, String?, Long>>): Pair<String, String>? =
         rows.filter { (_, type, _) -> type != null && (type.startsWith("image/") || type.startsWith("video/")) }

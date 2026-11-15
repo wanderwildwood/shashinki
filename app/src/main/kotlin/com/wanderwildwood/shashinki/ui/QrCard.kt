@@ -15,7 +15,6 @@ import android.provider.Settings
 import android.text.format.DateUtils
 import android.view.HapticFeedbackConstants
 import android.view.TextureView
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -337,6 +341,10 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
     val context = LocalContext.current
     val drawn = remember(found.raw) { draw(found.raw, found.format) }
     val wallet = remember(found.raw) { if (found.signIn) null else walletIntent(context) }
+    // What the last press did or could not do ("Copied", no app to open it), in words under the
+    // code. It stays until the next press: a toast on this panel could be gone before it was read.
+    var notice by remember(found.raw) { mutableStateOf<Int?>(null) }
+    fun then(action: () -> Unit): () -> Unit = { notice = null; action() }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -389,25 +397,39 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
                     )
                 }
             }
+            notice?.let { said ->
+                item {
+                    TextMMD(
+                        text = stringResource(said),
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                            .semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
+            }
             item { Spacer(Modifier.height(12.dp)) }
             if (found.action != null && found.intent != null) {
                 item {
-                    Choice(stringResource(found.action)) {
+                    Choice(stringResource(found.action), then {
                         val data = found.intent.data
                         if (data != null && (data.scheme == "http" || data.scheme == "https")) {
                             // A web address goes through the guarded opener: on the Kompakt the only
                             // thing that answers it can be the WebView test shell, which crashes.
                             openLink(context, data.toString(), context.getString(R.string.about_no_browser_address, data.toString()))
+                            onClose()
                         } else if (runCatching { context.startActivity(found.intent) }.isFailure) {
-                            Toast.makeText(context, R.string.qr_no_app, Toast.LENGTH_LONG).show()
+                            // Kept open, so the words are there to read.
+                            notice = R.string.qr_no_app
+                        } else {
+                            onClose()
                         }
-                        onClose()
-                    }
+                    })
                 }
             }
             if (wallet != null && drawn != null) {
                 item {
-                    Choice(stringResource(R.string.qr_save_wallet)) {
+                    Choice(stringResource(R.string.qr_save_wallet), then {
                         val picture = runCatching { keep(context, drawn) }.getOrNull()
                         if (picture != null) {
                             wallet.putExtra(Intent.EXTRA_STREAM, picture)
@@ -416,17 +438,17 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
                             runCatching { context.startActivity(wallet) }
                             onClose()
                         } else {
-                            Toast.makeText(context, R.string.qr_save_failed, Toast.LENGTH_SHORT).show()
+                            notice = R.string.qr_save_failed
                         }
-                    }
+                    })
                 }
             }
             item {
-                Choice(stringResource(R.string.qr_copy)) {
+                Choice(stringResource(R.string.qr_copy), then {
                     val clip = context.getSystemService(ClipboardManager::class.java)
                     clip?.setPrimaryClip(ClipData.newPlainText(null, found.raw))
-                    Toast.makeText(context, R.string.qr_copied, Toast.LENGTH_SHORT).show()
-                }
+                    notice = R.string.qr_copied
+                })
             }
             item { Choice(stringResource(R.string.shashinki_close), onClose) }
         }
