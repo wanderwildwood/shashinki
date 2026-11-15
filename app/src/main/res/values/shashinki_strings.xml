@@ -100,6 +100,7 @@
     <string name="qr_no_app">Nothing on this phone opens this kind of code. It can be copied.</string>
     <string name="shashinki_gallery_button">Gallery button opens</string>
     <string name="shashinki_gallery_last">The last picture</string>
+    <string name="shashinki_gallery_all">All pictures</string>
     <string name="shashinki_gallery_pick">A folder you pick</string>
     <string name="shashinki_gallery_folder">The newest picture in %1$s</string>
     <string name="shashinki_folder">Folder</string>

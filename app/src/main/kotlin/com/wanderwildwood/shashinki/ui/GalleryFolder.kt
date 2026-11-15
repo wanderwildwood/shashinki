@@ -7,8 +7,9 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 
 /**
- * What the gallery button opens: the last picture taken, or the newest picture or video in a
- * folder chosen in settings (Screenshots, another app's pictures).
+ * What the gallery button opens: the last picture taken, every picture on the phone in Pictures,
+ * or the newest picture or video in a folder chosen in settings (Screenshots, another app's
+ * pictures).
  *
  * The folder is chosen on the phone's own "choose a folder" screen, which gives this app that
  * one folder to read and nothing else, so the app still asks for no storage permission. Only
@@ -17,6 +18,34 @@ import android.provider.MediaStore
 object GalleryFolder {
 
     private const val KEY = "shashinki_gallery_folder"
+    private const val KEY_ALL = "shashinki_gallery_all"
+
+    /** Pictures (garō), and what it is asked for every picture in one pile, newest first. */
+    private const val PICTURES = "com.wanderwildwood.garo"
+    private const val ALL_PICTURES = "com.wanderwildwood.garo.action.ALL_PICTURES"
+
+    /** Whether the button opens Pictures on every picture on the phone. */
+    @JvmStatic
+    fun all(context: Context): Boolean = Defaults.prefs(context).getBoolean(KEY_ALL, false)
+
+    /** All pictures on or off. On lets go of a chosen folder: the button opens one thing. */
+    fun chooseAll(context: Context, on: Boolean) {
+        if (on) choose(context, null)
+        Defaults.prefs(context).edit().putBoolean(KEY_ALL, on).apply()
+    }
+
+    /**
+     * Open Pictures on all the pictures. Pictures reads them itself, so this app lends nothing
+     * and still asks for no storage permission. False when Pictures is not on the phone, or is
+     * a copy from before it knew the request; the button then opens the last picture.
+     */
+    @JvmStatic
+    fun openAll(context: Context): Boolean = try {
+        context.startActivity(Intent(ALL_PICTURES).setPackage(PICTURES))
+        true
+    } catch (e: RuntimeException) {
+        false
+    }
 
     /**
      * One picture or video: where it is, what kind it is, and whether the gallery must be lent
@@ -41,7 +70,9 @@ object GalleryFolder {
         if (tree != null) {
             runCatching { resolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
-        Defaults.prefs(context).edit().apply { if (tree == null) remove(KEY) else putString(KEY, tree.toString()) }.apply()
+        Defaults.prefs(context).edit().apply {
+            if (tree == null) remove(KEY) else { putString(KEY, tree.toString()); remove(KEY_ALL) }
+        }.apply()
     }
 
     /** The folder's name as the phone shows it: "Screenshots" for primary:Pictures/Screenshots. */

@@ -83,6 +83,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
     }
 
     val galleryFolder = remember(version) { GalleryFolder.tree(activity) }
+    val galleryAll = remember(version) { GalleryFolder.all(activity) }
 
     // The camera is closed while this is open, so what it offered is what it offered as it closed.
     val info = CameraLayer.panelInfo
@@ -242,7 +243,7 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
                 Setting(
                     title = stringResource(R.string.shashinki_gallery_button),
                     value = galleryFolder?.let { stringResource(R.string.shashinki_gallery_folder, GalleryFolder.name(it)) }
-                        ?: stringResource(R.string.shashinki_gallery_last),
+                        ?: stringResource(if (galleryAll) R.string.shashinki_gallery_all else R.string.shashinki_gallery_last),
                     onClick = { galleryOpen = true },
                 )
             }
@@ -296,14 +297,20 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             title = stringResource(R.string.shashinki_gallery_button),
             options = listOf(
                 stringResource(R.string.shashinki_gallery_last),
+                stringResource(R.string.shashinki_gallery_all),
                 galleryFolder?.let { GalleryFolder.name(it) } ?: stringResource(R.string.shashinki_gallery_pick),
             ) + if (galleryFolder != null) listOf(stringResource(R.string.shashinki_gallery_pick)) else emptyList(),
-            chosen = if (galleryFolder == null) 0 else 1,
+            chosen = when {
+                galleryFolder != null -> 2
+                galleryAll -> 1
+                else -> 0
+            },
             onChoose = { i ->
                 galleryOpen = false
                 when {
-                    i == 0 -> { GalleryFolder.choose(activity, null); changed() }
-                    galleryFolder != null && i == 1 -> Unit // the folder in use: stays
+                    i == 0 -> { GalleryFolder.chooseAll(activity, false); GalleryFolder.choose(activity, null); changed() }
+                    i == 1 -> { GalleryFolder.chooseAll(activity, true); changed() }
+                    galleryFolder != null && i == 2 -> Unit // the folder in use: stays
                     else -> pickGalleryFolder.launch(null)
                 }
             },

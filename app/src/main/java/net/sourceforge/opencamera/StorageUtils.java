@@ -1708,6 +1708,11 @@ public class StorageUtils {
     void openGallery() {
         // shashinki: with a folder chosen in settings the button opens the newest picture in it,
         // rather than the last one taken. The folder is listed off the main thread.
+        // Set to all pictures, Pictures opens on every picture; without Pictures, the last one taken.
+        if( com.wanderwildwood.shashinki.ui.GalleryFolder.all(context) && !((MainActivity)context).is_test
+                && com.wanderwildwood.shashinki.ui.GalleryFolder.openAll(context) ) {
+            return;
+        }
         final Uri folder = com.wanderwildwood.shashinki.ui.GalleryFolder.tree(context);
         if( folder != null ) {
             new Thread(() -> {

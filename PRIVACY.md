@@ -40,6 +40,9 @@ names, kinds and dates of the files directly in it, to find the newest picture, 
 picture to your gallery app. It asks for no storage permission and keeps only the folder's
 address.
 
+If you set the gallery button to all pictures, Lens only asks Pictures to open; Pictures reads
+the pictures itself, and Lens reads none of them.
+
 ## Outside services
 
 Lens itself talks to no one. Two buttons hand something to another app, and only when pressed:
