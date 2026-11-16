@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -98,6 +99,7 @@ public class PreferenceSubCameraControlsMore extends PreferenceSubScreen {
                             }
                         });
                         alert.show();
+                        DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
                         dialogs.add(alert);
                         return true;
                     }
@@ -203,6 +205,7 @@ public class PreferenceSubCameraControlsMore extends PreferenceSubScreen {
                             }
                         });
                         alert.show();
+                        DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
                         dialogs.add(alert);
                         return false;
                     }

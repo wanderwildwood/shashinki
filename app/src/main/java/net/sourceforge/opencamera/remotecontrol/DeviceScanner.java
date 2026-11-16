@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera.remotecontrol;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -249,7 +250,7 @@ public class DeviceScanner extends AppCompatActivity {
         int message_id = R.string.permission_rationale_bluetooth_scan_connect;
 
         final String [] permissions_f = permissions;
-        new AlertDialog.Builder(this)
+        DarkMode.INSTANCE.window(new AlertDialog.Builder(this)
                 .setTitle(R.string.permission_rationale_title)
                 .setMessage(message_id)
                 .setIcon(android.R.drawable.ic_dialog_alert)
@@ -260,7 +261,7 @@ public class DeviceScanner extends AppCompatActivity {
                             Log.d(TAG, "requesting permission...");
                         ActivityCompat.requestPermissions(DeviceScanner.this, permissions_f, REQUEST_BLUETOOTHSCANCONNECT_PERMISSIONS);
                     }
-                }).show();
+                }).show().getWindow().getDecorView());
     }
 
     @Override

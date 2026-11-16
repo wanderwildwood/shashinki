@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import net.sourceforge.opencamera.ui.FolderChooserDialog;
 import net.sourceforge.opencamera.ui.MyEditTextPreference;
 
@@ -728,6 +729,7 @@ public class MyPreferenceFragment extends PreferenceFragment implements OnShared
                             }
                         });
                         alert.show();
+                        DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
                         dialogs.add(alert);
                         return false;
                     }
@@ -845,6 +847,7 @@ public class MyPreferenceFragment extends PreferenceFragment implements OnShared
             }
         });
         alert.show();
+        DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
         dialogs.add(alert);
     }
 

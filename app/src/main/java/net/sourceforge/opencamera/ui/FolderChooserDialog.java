@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera.ui;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import net.sourceforge.opencamera.MyDebug;
 import net.sourceforge.opencamera.R;
 import net.sourceforge.opencamera.StorageUtils;
@@ -146,6 +147,7 @@ public class FolderChooserDialog extends DialogFragment {
         folder_dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog_interface) {
+                DarkMode.INSTANCE.window(folder_dialog.getWindow().getDecorView());
                 if( mode_folder ) {
                     Button b_positive = folder_dialog.getButton(AlertDialog.BUTTON_POSITIVE);
                     b_positive.setOnClickListener(new View.OnClickListener() {
@@ -423,6 +425,7 @@ public class FolderChooserDialog extends DialogFragment {
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
             dialog.show();
+            DarkMode.INSTANCE.window(dialog.getWindow().getDecorView());
         }
         else {
             Toast.makeText(getActivity(), R.string.cant_write_folder, Toast.LENGTH_SHORT).show();

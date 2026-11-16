@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera.ui;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import net.sourceforge.opencamera.MyApplicationInterface;
 import net.sourceforge.opencamera.cameracontroller.CameraController;
 import net.sourceforge.opencamera.MainActivity;
@@ -2828,6 +2829,7 @@ public class MainUI {
         });
         //main_activity.showAlert(alert);
         alert.show();
+        DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
         return alert;
     }
 

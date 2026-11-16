@@ -1,5 +1,6 @@
 package net.sourceforge.opencamera;
 
+import com.wanderwildwood.shashinki.ui.DarkMode;
 import net.sourceforge.opencamera.cameracontroller.CameraController;
 import net.sourceforge.opencamera.cameracontroller.CameraControllerManager;
 import net.sourceforge.opencamera.cameracontroller.CameraControllerManager2;
@@ -553,7 +554,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                         launchOnlineHelp();
                     }
                 });
-                alertDialog.show();
+                DarkMode.INSTANCE.window(alertDialog.show().getWindow().getDecorView());
             }
 
             setFirstTimeFlag();
@@ -599,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                         alertDialog.setTitle(R.string.whats_new);
                         alertDialog.setMessage(R.string.whats_new_text);
                         alertDialog.setPositiveButton(android.R.string.ok, null);
-                        alertDialog.show();
+                        DarkMode.INSTANCE.window(alertDialog.show().getWindow().getDecorView());
                     }
                 }
                 // We set the latest_version whether or not the dialog is shown - if we showed the first time dialog, we don't
@@ -2352,6 +2353,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         if( MyDebug.LOG )
             Log.d(TAG, "clickedSwitchMultiCamera: time before showing dialog: " + (System.currentTimeMillis() - debug_time));
         dialog.show();
+        DarkMode.INSTANCE.window(dialog.getWindow().getDecorView());
         if( MyDebug.LOG )
             Log.d(TAG, "clickedSwitchMultiCamera: total time: " + (System.currentTimeMillis() - debug_time));
     }
@@ -4014,6 +4016,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         handler.postDelayed(new Runnable() {
             public void run() {
                 alert.show();
+                DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
             }
         }, 20);
         // note that 1ms usually fixes the problem, but not always; 10ms seems fine, have set 20ms
@@ -4698,6 +4701,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                 }
             });
             alert.show();
+            DarkMode.INSTANCE.window(alert.getWindow().getDecorView());
         }
         else {
             File start_folder = getStorageUtils().getImageFolder();
@@ -4758,7 +4762,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                 if( which == clear_index ) {
                     if( MyDebug.LOG )
                         Log.d(TAG, "selected clear save history");
-                    new AlertDialog.Builder(MainActivity.this)
+                    DarkMode.INSTANCE.window(new AlertDialog.Builder(MainActivity.this)
                             .setIcon(android.R.drawable.ic_dialog_alert)
                             .setTitle(R.string.clear_folder_history)
                             .setMessage(R.string.clear_folder_history_question)
@@ -4793,7 +4797,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                                     showPreview(true);
                                 }
                             })
-                            .show();
+                            .show().getWindow().getDecorView());
                 }
                 else if( which == new_index ) {
                     if( MyDebug.LOG )
