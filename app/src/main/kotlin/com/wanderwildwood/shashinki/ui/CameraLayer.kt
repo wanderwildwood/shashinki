@@ -302,13 +302,13 @@ object CameraLayer {
 
         val layer = ComposeView(activity).apply {
             setContent {
-                ThemeMMD(colorScheme = monochrome, typography = houseTypography) {
+                ThemeMMD(colorScheme = monochrome, typography = houseTypography) { DarkSelection {
                     // A cursor that blinks repaints the panel twice a second for as long as a
                     // text field has focus.
                     CompositionLocalProvider(LocalCursorBlinkEnabled provides false) {
                         Camera(activity)
                     }
-                }
+                } }
             }
         }
         activity.addContentView(
