@@ -241,7 +241,6 @@ fun SettingsScreen(activity: MainActivity, onClose: () -> Unit) {
             item {
                 Toggle(
                     title = stringResource(R.string.settings_dark),
-                    note = stringResource(R.string.settings_dark_note),
                     on = DarkMode.on,
                 ) {
                     DarkMode.set(activity, it)
