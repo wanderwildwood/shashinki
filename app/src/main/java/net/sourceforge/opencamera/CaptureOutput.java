@@ -49,4 +49,19 @@ public final class CaptureOutput {
             a = a.substring(at + 1);
         return !a.equals(own) && !a.startsWith(own + ".");
     }
+
+    /** True when Lens was opened to take a photo or video for another app. */
+    static boolean isForAnotherApp(String action) {
+        return MediaStore.ACTION_IMAGE_CAPTURE.equals(action) ||
+                MediaStore.ACTION_IMAGE_CAPTURE_SECURE.equals(action) ||
+                MediaStore.ACTION_VIDEO_CAPTURE.equals(action);
+    }
+
+    /** Whether a photo or video carries where it was taken (and which way the camera faced).
+     *  One taken for another app never does, whatever "Where a photo was taken" says: the
+     *  picture leaves Lens at once, and the person asked that app for a picture, not a place.
+     */
+    static boolean storesLocation(String action, boolean setting) {
+        return setting && !isForAnotherApp(action);
+    }
 }

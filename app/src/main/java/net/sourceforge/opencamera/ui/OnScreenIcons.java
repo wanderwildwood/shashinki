@@ -119,7 +119,7 @@ public class OnScreenIcons {
 
     private void updateStoreLocationIcon() {
         ImageButton view = main_activity.findViewById(R.id.store_location);
-        boolean enabled = main_activity.getApplicationInterface().getGeotaggingPref();
+        boolean enabled = main_activity.getApplicationInterface().getGeotaggingSetting();
         view.setImageResource(enabled ? R.drawable.ic_gps_fixed_red_48dp : R.drawable.ic_gps_fixed_white_48dp);
         view.setContentDescription( main_activity.getResources().getString(enabled ? R.string.preference_location_disable : R.string.preference_location_enable) );
     }
@@ -524,7 +524,7 @@ public class OnScreenIcons {
     public void clickedStoreLocation() {
         if( MyDebug.LOG )
             Log.d(TAG, "clickedStoreLocation");
-        boolean value = main_activity.getApplicationInterface().getGeotaggingPref();
+        boolean value = main_activity.getApplicationInterface().getGeotaggingSetting();
         value = !value;
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(main_activity);

@@ -1232,8 +1232,14 @@ public class MyApplicationInterface extends BasicApplicationInterface {
         }
     }
 
+    /** Whether this photo or video is to carry where it was taken: never one taken for another app. */
     @Override
     public boolean getGeotaggingPref() {
+        return CaptureOutput.storesLocation(main_activity.getIntent().getAction(), getGeotaggingSetting());
+    }
+
+    /** "Where a photo was taken" as set, for the switch that shows and changes it. */
+    public boolean getGeotaggingSetting() {
         return sharedPreferences.getBoolean(PreferenceKeys.LocationPreferenceKey, false);
     }
 
@@ -1243,7 +1249,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
     }
 
     boolean getGeodirectionPref() {
-        return sharedPreferences.getBoolean(PreferenceKeys.GPSDirectionPreferenceKey, false);
+        return CaptureOutput.storesLocation(main_activity.getIntent().getAction(), sharedPreferences.getBoolean(PreferenceKeys.GPSDirectionPreferenceKey, false));
     }
 
     @Override

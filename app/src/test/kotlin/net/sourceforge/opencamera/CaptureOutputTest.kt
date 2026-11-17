@@ -31,4 +31,22 @@ class CaptureOutputTest {
     @Test fun aLookalikeNameIsAnotherApp() {
         assertTrue(CaptureOutput.acceptable("content", "${own}2.provider", own))
     }
+
+    @Test fun aPictureForAnotherAppNeverCarriesLocation() {
+        for (action in listOf(
+            "android.media.action.IMAGE_CAPTURE",
+            "android.media.action.IMAGE_CAPTURE_SECURE",
+            "android.media.action.VIDEO_CAPTURE",
+        )) {
+            assertFalse(action, CaptureOutput.storesLocation(action, true))
+            assertFalse(action, CaptureOutput.storesLocation(action, false))
+        }
+    }
+
+    @Test fun anOrdinaryPictureFollowsTheSetting() {
+        for (action in listOf(null, "android.intent.action.MAIN", "android.media.action.STILL_IMAGE_CAMERA")) {
+            assertTrue(CaptureOutput.storesLocation(action, true))
+            assertFalse(CaptureOutput.storesLocation(action, false))
+        }
+    }
 }

@@ -684,7 +684,7 @@ public class DrawPreview {
         take_photo_border_pref = sharedPreferences.getBoolean(PreferenceKeys.TakePhotoBorderPreferenceKey, true);
         preview_size_wysiwyg_pref = sharedPreferences.getString(PreferenceKeys.PreviewSizePreferenceKey, "preference_preview_size_wysiwyg").equals("preference_preview_size_wysiwyg");
         crop_guide_pref = sharedPreferences.getString(PreferenceKeys.ShowCropGuidePreferenceKey, "crop_guide_none");
-        store_location_pref = sharedPreferences.getBoolean(PreferenceKeys.LocationPreferenceKey, false);
+        store_location_pref = applicationInterface.getGeotaggingPref(); // off for a photo taken for another app, so no location mark shows
 
         show_angle_line_pref = sharedPreferences.getBoolean(PreferenceKeys.ShowAngleLinePreferenceKey, false);
         show_pitch_lines_pref = sharedPreferences.getBoolean(PreferenceKeys.ShowPitchLinesPreferenceKey, false);
