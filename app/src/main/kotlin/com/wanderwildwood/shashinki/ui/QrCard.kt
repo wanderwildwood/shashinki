@@ -103,7 +103,10 @@ data class Found(
 )
 
 internal fun describe(context: Context, result: Result): Found =
-    describe(context, ResultParser.parseResult(result)).copy(format = result.barcodeFormat)
+    // Whatever a code holds, a failure to make sense of it leaves its text to copy, not a crash.
+    runCatching { describe(context, ResultParser.parseResult(result)) }
+        .getOrElse { Found(result.text.orEmpty(), R.string.qr_kind_text_plain, result.text.orEmpty(), null, null) }
+        .copy(format = result.barcodeFormat)
 
 internal fun describe(context: Context, parsed: ParsedResult): Found {
     val raw = parsed.displayResult.orEmpty()
@@ -125,22 +128,34 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
                 "http", "https" -> R.string.qr_kind_web
                 else -> R.string.qr_kind_link
             }
-            Found(raw, kind, parsed.uri, R.string.qr_open, ifAnyone(Intent(Intent.ACTION_VIEW, uri)))
+            // A web address is checked for a browser. Any other scheme is offered as it is: this
+            // app can only see the handlers of the schemes its manifest names, and the press
+            // already says so when nothing answers.
+            val view = Intent(Intent.ACTION_VIEW, uri)
+            Found(raw, kind, parsed.uri, R.string.qr_open, if (kind == R.string.qr_kind_web) ifAnyone(view) else view)
         }
         is WifiParsedResult -> {
-            val suggestion = WifiNetworkSuggestion.Builder().setSsid(parsed.ssid).apply {
-                val pass = parsed.password
-                when (parsed.networkEncryption?.uppercase()) {
-                    "WPA", "WPA2" -> if (!pass.isNullOrEmpty()) setWpa2Passphrase(pass)
-                    "SAE", "WPA3" -> if (!pass.isNullOrEmpty()) setWpa3Passphrase(pass)
-                    else -> Unit
-                }
-            }.build()
+            val pass = parsed.password
+            val security = parsed.networkEncryption?.trim()?.uppercase().orEmpty()
+            // Android refuses a name or password it cannot take (a password with letters outside
+            // ASCII, say), so such a code is copied only. A security word it does not know, or a
+            // WPA network without its password, is not joined as an open network either.
+            val suggestion = runCatching {
+                WifiNetworkSuggestion.Builder().setSsid(parsed.ssid).apply {
+                    when (security) {
+                        "WPA", "WPA2" -> setWpa2Passphrase(pass?.takeIf { it.isNotEmpty() } ?: error("no password"))
+                        "SAE", "WPA3" -> setWpa3Passphrase(pass?.takeIf { it.isNotEmpty() } ?: error("no password"))
+                        "", "NOPASS" -> Unit
+                        else -> error("unknown security")
+                    }
+                }.build()
+            }.getOrNull()
             // Android's own "save this network?" question, which needs no permission of this app's.
-            val join = Intent(Settings.ACTION_WIFI_ADD_NETWORKS)
-                .putParcelableArrayListExtra(Settings.EXTRA_WIFI_NETWORK_LIST, arrayListOf(suggestion))
-            val wep = parsed.networkEncryption.equals("WEP", ignoreCase = true)
-            Found(raw, R.string.qr_kind_wifi, parsed.ssid, if (wep) null else R.string.qr_join, if (wep) null else ifAnyone(join))
+            val join = suggestion?.let {
+                Intent(Settings.ACTION_WIFI_ADD_NETWORKS)
+                    .putParcelableArrayListExtra(Settings.EXTRA_WIFI_NETWORK_LIST, arrayListOf(it))
+            }?.let(::ifAnyone)
+            Found(raw, R.string.qr_kind_wifi, parsed.ssid.orEmpty(), if (join == null) null else R.string.qr_join, join)
         }
         is AddressBookParsedResult -> {
             val name = parsed.names?.firstOrNull().orEmpty()
@@ -306,6 +321,9 @@ internal fun QrWatch(
                     try { QrReader.read(shot) } finally { shot.recycle() }
                 }
             }
+            // A photo or a video begun while the frame was being read: the code waits, so the
+            // camera is not closed under the capture.
+            if (preview.isTakingPhotoOrOnTimer || preview.isVideoRecording) continue
             when (seen) {
                 is QrReader.Seen.Code -> {
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
