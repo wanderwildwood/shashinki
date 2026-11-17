@@ -45,11 +45,22 @@ the pictures itself, and Lens reads none of them.
 
 ## Outside services
 
-Lens itself talks to no one. Two buttons hand something to another app, and only when pressed:
-**Look up**, on a shop or book barcode, gives the number to the phone's web search, or opens
-DuckDuckGo with it in the browser when the phone has no search app; and a web address read from a
-code opens in the browser. What the search engine or the website receives is covered by its own
-privacy policy ([DuckDuckGo's](https://duckduckgo.com/privacy)), not by this one.
+Lens itself talks to no one. A code it reads is handed to another app only when the code's
+button is pressed: a web address or other link to the app that opens it; a Wi-Fi network, with
+its password, to Android's own "save this network?" question; a contact to Contacts; an email
+or a text, with what the code says to write, to the mail or messaging app; a phone number to the
+dialer, not a call; a place to a map; an event to Datebook or the calendar; a sign-in code to
+Passwords or an authenticator. **Look up**, on a shop or book barcode, gives the number to the
+phone's web search, or opens DuckDuckGo with it in the browser when the phone has no search
+app. **Save to Wallet** gives Wallet the code drawn again and its text. What the search engine
+or a website receives is covered by its own privacy policy
+([DuckDuckGo's](https://duckduckgo.com/privacy)), not by this one.
+
+When another app asks Lens to scan, the first code read goes straight back to that app, with no
+press: that is what it asked for.
+
+Each time it saves a photo, Lens tells Pictures so, with nothing attached, so that Pictures'
+own backup, when it is on, can send the photo on.
 
 ## No analytics
 
