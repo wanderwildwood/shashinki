@@ -4121,6 +4121,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         // workaround for setImageResource also resetting padding, Android bug
         galleryButton.setPadding(left, top, right, bottom);
         gallery_bitmap = null;
+        com.wanderwildwood.shashinki.ui.CameraLayer.thumbnail(null); // shashinki
     }
 
     /** Shows a thumbnail for the gallery icon.
@@ -6170,6 +6171,10 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
             if( MyDebug.LOG )
                 Log.d(TAG, "initLocation: camera in background!");
             // we will end up here if app is pause/resumed when camera in background (settings, dialog, etc)
+        }
+        else if( CaptureOutput.isForAnotherApp(getIntent().getAction()) ) {
+            // a photo or video taken for another app never carries where it was taken, so there is no need to know
+            applicationInterface.getLocationSupplier().freeLocationListeners();
         }
         else if( !applicationInterface.getLocationSupplier().setupLocationListener() ) {
             if( MyDebug.LOG )
