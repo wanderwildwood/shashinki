@@ -302,7 +302,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
                 Log.d(TAG, "from video capture intent");
             Bundle myExtras = main_activity.getIntent().getExtras();
             if (myExtras != null) {
-                Uri intent_uri = myExtras.getParcelable(MediaStore.EXTRA_OUTPUT);
+                Uri intent_uri = CaptureOutput.from(main_activity, myExtras);
                 if( intent_uri != null ) {
                     if( MyDebug.LOG )
                         Log.d(TAG, "save to: " + intent_uri);
@@ -407,7 +407,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
                 Log.d(TAG, "from video capture intent");
             Bundle myExtras = main_activity.getIntent().getExtras();
             if (myExtras != null) {
-                Uri intent_uri = myExtras.getParcelable(MediaStore.EXTRA_OUTPUT);
+                Uri intent_uri = CaptureOutput.from(main_activity, myExtras);
                 if( intent_uri != null ) {
                     if( MyDebug.LOG )
                         Log.d(TAG, "save to: " + intent_uri);
@@ -3396,7 +3396,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
                 Log.d(TAG, "from image capture intent");
             Bundle myExtras = main_activity.getIntent().getExtras();
             if( myExtras != null ) {
-                image_capture_intent_uri = myExtras.getParcelable(MediaStore.EXTRA_OUTPUT);
+                image_capture_intent_uri = CaptureOutput.from(main_activity, myExtras);
                 if( MyDebug.LOG )
                     Log.d(TAG, "save to: " + image_capture_intent_uri);
             }
