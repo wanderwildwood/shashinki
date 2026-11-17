@@ -126,7 +126,8 @@ class ReadCodeActivity : ComponentActivity() {
             BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
         }
     } catch (e: Exception) {
-        android.util.Log.w("shashinki", "picture not opened: $uri", e)
+        // The kind of failure only: a picture's address can carry its file's name.
+        android.util.Log.w("shashinki", "picture not opened: ${e.javaClass.simpleName}")
         null
     }
 
