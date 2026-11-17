@@ -52,9 +52,9 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
   first code read goes straight back to the app that asked.
 - **Read code** in the share sheet reads a code out of a picture — a screenshot of a ticket, a
   photo of a poster — and shows it on the same screen.
-- **Ten settings**: reading codes, picture size, video size, steady video, picture quality, a
-  self-timer, the shutter sound, writing where a photo was taken into it, a grid, and the folder
-  under DCIM. Steady video is on to begin with: the camera takes out some of the shake of a
+- **Twelve settings**: reading codes, picture size, video size, steady video, picture quality, a
+  self-timer, the shutter sound, writing where a photo was taken into it, a grid, dark mode, the
+  folder under DCIM, and whether the gallery button opens Lens's own pictures or all of them. Steady video is on to begin with: the camera takes out some of the shake of a
   hand-held phone, and cuts the picture a little narrower to do it. It is there only on a camera
   that can.
 
