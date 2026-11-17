@@ -4,8 +4,8 @@
 build/
 local.properties
 
-signing/signing.properties
-signing/signing.keystore
+/signing/*
+!/signing/.gitignore
 
 # Built screenshots come from the kompakt AVD, not from a build
 *.apk
