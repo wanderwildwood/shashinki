@@ -184,6 +184,9 @@ object CameraLayer {
      */
     @JvmStatic
     fun resume(activity: MainActivity) {
+        // The window coming back is the one the bar reads from: a photo or scan asked for by
+        // another app opens a second window, which took this over while it was up.
+        host = WeakReference(activity)
         if (Defaults.qr(activity) || ScanRequest.asked(activity.intent)) CodeFrames.start() else CodeFrames.stop()
         refreshSoon()
     }
@@ -454,11 +457,30 @@ object CameraLayer {
 
     internal val STRIP: Dp = 48.dp
     internal val BAR: Dp = 96.dp
+
+    /**
+     * Opens the settings as the bar's settings button does; set only while the camera's own
+     * screen is up, so nothing opens over a code being shown or settings already open.
+     */
+    internal var openSettings: (() -> Unit)? = null
+
+    /**
+     * The hardware Menu key: the same settings as the bar's button, not Open Camera's own. Not
+     * while recording, when the button is not there either.
+     */
+    @JvmStatic
+    fun menuKey() {
+        if (!snapshot.recording) openSettings?.invoke()
+    }
 }
 
 @Composable
 private fun Camera(activity: MainActivity) {
     var settingsOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val openSettings = {
+        CameraLayer.panelOpened(activity)
+        settingsOpen = true
+    }
     val shot = CameraLayer.snapshot
 
     if (settingsOpen) {
@@ -519,6 +541,11 @@ private fun Camera(activity: MainActivity) {
         BackHandler(onBack = close)
         QrScreen(f, onClose = close)
         return
+    }
+
+    DisposableEffect(Unit) {
+        CameraLayer.openSettings = openSettings
+        onDispose { CameraLayer.openSettings = null }
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -653,10 +680,7 @@ private fun Camera(activity: MainActivity) {
                 Spacer(Modifier.width(8.dp))
             }
             if (!shot.recording) {
-                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings)) {
-                    CameraLayer.panelOpened(activity)
-                    settingsOpen = true
-                }
+                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings), onClick = openSettings)
             }
         }
 
