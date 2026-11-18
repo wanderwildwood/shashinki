@@ -2088,7 +2088,7 @@ public class ImageSaver extends Thread {
                                     ExifHandler.setExifFromData(request, data, fileDescriptor, bitmap.getWidth(), bitmap.getHeight());
                                 }
                                 else {
-                                    Log.e(TAG, "failed to create ParcelFileDescriptor for saveUri: " + saveUri);
+                                    Log.e(TAG, "failed to create ParcelFileDescriptor for saveUri"); // shashinki: not its address, which can carry a file's name
                                 }
                             }
                             finally {

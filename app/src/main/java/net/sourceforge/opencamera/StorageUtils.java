@@ -1326,7 +1326,7 @@ public class StorageUtils {
             // thumbnail, rather than crashing!
             // N.B., we catch Exception is otherwise compiler complains IllegalArgumentException
             // isn't ever thrown - even though it is!?
-            Log.e(TAG, "Exception using treeUri: " + treeUri);
+            Log.e(TAG, "Exception using treeUri: " + e.getClass().getSimpleName()); // shashinki: not the folder's address
             return media;
         }
         if( MyDebug.LOG )
