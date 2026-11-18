@@ -51,11 +51,15 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
 - **Other apps can ask it to scan.** It answers the request ZXing's Barcode Scanner made the
   custom (`com.google.zxing.client.android.SCAN`): the camera opens with the square up, and the
   first code read goes straight back to the app that asked.
+- **Other apps can ask it for a photo or video**, the way they would ask the phone's own
+  camera, and get the picture back. When the app gives an address to save it to, Lens writes only
+  to that address; otherwise the picture is saved to the folder below and handed back from there.
 - **Read code** in the share sheet reads a code out of a picture — a screenshot of a ticket, a
   photo of a poster — and shows it on the same screen.
 - **Twelve settings**: reading codes, picture size, video size, steady video, picture quality, a
   self-timer, the shutter sound, writing where a photo was taken into it, a grid, dark mode, the
-  folder under DCIM, and whether the gallery button opens Lens's own pictures or all of them. Steady video is on to begin with: the camera takes out some of the shake of a
+  folder under DCIM, and whether the gallery button opens Lens's own pictures or all of them.
+  Dark mode follows the phone's dark setting unless you switch it here. Steady video is on to begin with: the camera takes out some of the shake of a
   hand-held phone, and cuts the picture a little narrower to do it. It is there only on a camera
   that can.
 
@@ -67,8 +71,9 @@ When the camera cannot be opened — on a Kompakt, usually because the switch on
 has turned it off — the screen says so, and it says so too if the camera stops or a photo
 fails.
 
-It uses Android's Camera2 interface, which the Kompakt's camera supports in full. Open Camera
-on its own starts the Kompakt on the older interface, where photos come out black.
+It needs Android 12 or later. It uses Android's Camera2 interface, which the Kompakt's camera
+supports in full. Open Camera on its own starts the Kompakt on the older interface, where
+photos come out black.
 
 ## What it does not do
 
