@@ -1834,16 +1834,19 @@ public class StorageUtils {
                 final boolean item = type != null && ( type.startsWith("image/") || type.startsWith("video/") );
                 // A picture known only by its place in the chosen folder is lent to the gallery to read.
                 final int lend = found != null && found.lend ? Intent.FLAG_GRANT_READ_URI_PERMISSION : 0;
-                try {
-                    Intent intent = item ?
-                            new Intent(MediaStore.ACTION_REVIEW).setDataAndType(uri, type).addFlags(lend) :
-                            new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);
-                    intent.setPackage("com.wanderwildwood.garo");
-                    context.startActivity(intent);
-                    done = true;
-                }
-                catch(RuntimeException e) {
-                    // not installed: the phone's own choice below
+                // Only the real Pictures, signed with its release certificate: another app could take its name.
+                if( com.wanderwildwood.shashinki.ui.HouseApps.isReal(context, com.wanderwildwood.shashinki.ui.HouseApps.PICTURES) ) {
+                    try {
+                        Intent intent = item ?
+                                new Intent(MediaStore.ACTION_REVIEW).setDataAndType(uri, type).addFlags(lend) :
+                                new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_GALLERY);
+                        intent.setPackage(com.wanderwildwood.shashinki.ui.HouseApps.PICTURES);
+                        context.startActivity(intent);
+                        done = true;
+                    }
+                    catch(RuntimeException e) {
+                        // not installed: the phone's own choice below
+                    }
                 }
                 // Without Pictures: what the phone opens a photo or video with, or for no single
                 // one its gallery. The older "review" requests below went to whichever app

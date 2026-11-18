@@ -261,7 +261,9 @@ private fun signIn(context: Context, text: String): Found {
         ""
     }
     val view = Intent(Intent.ACTION_VIEW, uri)
-    val passwords = Intent(view).setPackage(PASSWORDS).takeIf { it.resolveActivity(context.packageManager) != null }
+    val passwords = Intent(view).setPackage(PASSWORDS).takeIf {
+        it.resolveActivity(context.packageManager) != null && HouseApps.isReal(context, PASSWORDS)
+    }
     return if (passwords != null) Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_add_passwords, passwords, signIn = true)
     else Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_open, view.takeIf { it.resolveActivity(context.packageManager) != null }, signIn = true)
 }
@@ -508,10 +510,10 @@ internal fun draw(raw: String, format: BarcodeFormat = BarcodeFormat.QR_CODE): B
     null
 }
 
-/** Wallet, if it is on the phone, ready to be handed a picture with a code in it. */
+/** Wallet, if it is on the phone and is the real Wallet, ready to be handed a picture with a code in it. */
 private fun walletIntent(context: Context): Intent? {
     val send = Intent(Intent.ACTION_SEND).setType("image/png").setPackage(WALLET)
-    return send.takeIf { it.resolveActivity(context.packageManager) != null }
+    return send.takeIf { it.resolveActivity(context.packageManager) != null && HouseApps.isReal(context, WALLET) }
 }
 
 /**
@@ -546,6 +548,6 @@ private const val FRAME_WIDTH = 480
 private val QR_SIZE = 208.dp
 /** About this wide when shared: ten pixels a module for the usual code, plenty for a reader. */
 private const val SHARED_PX = 600
-private const val WALLET = "com.wanderwildwood.satsuire"
-private const val PASSWORDS = "com.wanderwildwood.aikotoba"
+private const val WALLET = HouseApps.WALLET
+private const val PASSWORDS = HouseApps.PASSWORDS
 private const val DATEBOOK = "com.wanderwildwood.koyomi"

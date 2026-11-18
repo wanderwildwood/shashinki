@@ -117,6 +117,8 @@
         <!-- The apps a QR code is handed to, so the camera can tell which are on the phone. -->
         <package android:name="com.wanderwildwood.satsuire" />
         <package android:name="com.wanderwildwood.aikotoba" />
+        <!-- Pictures, which a photo is shown in, checked to be the real one before it is lent a picture. -->
+        <package android:name="com.wanderwildwood.garo" />
         <package android:name="com.wanderwildwood.koyomi" />
         <!-- Files, which answers "choose a folder" and "open a file" on e-ink when it is installed. -->
         <package android:name="com.wanderwildwood.tana" />
