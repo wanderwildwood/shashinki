@@ -477,9 +477,13 @@ object CameraLayer {
 @Composable
 private fun Camera(activity: MainActivity) {
     var settingsOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    // Over the lock screen, settings wait for the unlock: the camera may be used without it,
+    // the settings (where pictures go, what is kept with them) may not.
     val openSettings = {
-        CameraLayer.panelOpened(activity)
-        settingsOpen = true
+        net.sourceforge.opencamera.KeyguardUtils.requireKeyguard(activity) {
+            CameraLayer.panelOpened(activity)
+            settingsOpen = true
+        }
     }
     val shot = CameraLayer.snapshot
 

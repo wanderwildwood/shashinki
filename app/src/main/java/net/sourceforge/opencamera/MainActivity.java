@@ -882,7 +882,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         else if( ACTION_SHORTCUT_SETTINGS.equals(action) ) {
             if( MyDebug.LOG )
                 Log.d(TAG, "launching from application shortcut for Open Camera: settings");
-            openSettings();
+            KeyguardUtils.requireKeyguard(this, this::openSettings);
         }
 
         Bundle extras = this.getIntent().getExtras();
