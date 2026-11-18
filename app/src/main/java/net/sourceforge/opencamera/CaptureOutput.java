@@ -2,17 +2,24 @@ package net.sourceforge.opencamera;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.UriPermission;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Where another app asks a photo or video taken for it to be written (MediaStore.EXTRA_OUTPUT).
  *
  * The write happens as Lens, so an address is taken only when it is a content:// address another
  * app gave out: never a file:// path (which could name Lens's own settings or other private files)
- * and never one of Lens's own providers. Any other address is ignored, and the picture is saved
- * where Lens saves its own and handed back from there.
+ * and never one of Lens's own providers. Nor an address Lens could write even without that app's
+ * leave: a photo or video Lens saved itself (Android lets the app that made a media-store item
+ * write to it) or anything in the folder Lens was given for its own pictures. Any other address
+ * is ignored.
  */
 public final class CaptureOutput {
 
@@ -32,7 +39,70 @@ public final class CaptureOutput {
         }
         if( uri == null )
             return null;
-        return acceptable(uri.getScheme(), uri.getAuthority(), context.getPackageName()) ? uri : null;
+        String own = context.getPackageName();
+        if( !acceptable(uri.getScheme(), uri.getAuthority(), own) )
+            return null;
+        if( underOwnGrant(uri.getAuthority(), grantedAuthorities(context)) )
+            return null;
+        if( isMediaStore(uri.getAuthority()) && ownedBy(mediaOwner(context, uri), own) )
+            return null;
+        return uri;
+    }
+
+    /** The providers Lens holds a lasting write grant on (the folder chosen for its pictures). */
+    private static List<String> grantedAuthorities(Context context) {
+        List<String> authorities = new ArrayList<>();
+        try {
+            for(UriPermission permission : context.getContentResolver().getPersistedUriPermissions()) {
+                if( permission.isWritePermission() && permission.getUri() != null )
+                    authorities.add(permission.getUri().getAuthority());
+            }
+        }
+        catch(RuntimeException e) {
+            // none known
+        }
+        return authorities;
+    }
+
+    /** Who made a media-store item, or null when Lens cannot see it (then Lens cannot write it either). */
+    private static String mediaOwner(Context context, Uri uri) {
+        try( Cursor cursor = context.getContentResolver().query(uri,
+                new String[]{MediaStore.MediaColumns.OWNER_PACKAGE_NAME}, null, null, null) ) {
+            if( cursor != null && cursor.moveToFirst() )
+                return cursor.getString(0);
+        }
+        catch(RuntimeException e) {
+            // not readable by Lens
+        }
+        return null;
+    }
+
+    /** True for the media store's own provider. */
+    static boolean isMediaStore(String authority) {
+        return authority != null && MediaStore.AUTHORITY.equalsIgnoreCase(stripUserInfo(authority));
+    }
+
+    /** True when a media-store item was made by Lens itself. */
+    static boolean ownedBy(String owner, String ownPackage) {
+        return owner != null && owner.equalsIgnoreCase(ownPackage);
+    }
+
+    /** True when the address is on a provider where Lens already holds a lasting write grant. */
+    static boolean underOwnGrant(String authority, List<String> grantedAuthorities) {
+        if( authority == null )
+            return false;
+        String a = stripUserInfo(authority);
+        for(String granted : grantedAuthorities) {
+            if( granted != null && stripUserInfo(granted).equalsIgnoreCase(a) )
+                return true;
+        }
+        return false;
+    }
+
+    /** An authority may carry user info ("user@host"); the provider is what follows the '@'. */
+    private static String stripUserInfo(String authority) {
+        int at = authority.lastIndexOf('@');
+        return at >= 0 ? authority.substring(at + 1) : authority;
     }
 
     /** True for a content:// address whose provider is not Lens's own. */
@@ -41,12 +111,8 @@ public final class CaptureOutput {
             return false;
         if( authority == null || authority.isEmpty() )
             return false;
-        String a = authority.toLowerCase(java.util.Locale.ROOT);
+        String a = stripUserInfo(authority.toLowerCase(java.util.Locale.ROOT));
         String own = ownPackage.toLowerCase(java.util.Locale.ROOT);
-        // An authority may carry user info ("user@host"); the provider is what follows the '@'.
-        int at = a.lastIndexOf('@');
-        if( at >= 0 )
-            a = a.substring(at + 1);
         return !a.equals(own) && !a.startsWith(own + ".");
     }
 

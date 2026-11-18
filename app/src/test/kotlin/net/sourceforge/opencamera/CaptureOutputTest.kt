@@ -32,6 +32,24 @@ class CaptureOutputTest {
         assertTrue(CaptureOutput.acceptable("content", "${own}2.provider", own))
     }
 
+    @Test fun aMediaStoreItemLensMadeIsNeverTaken() {
+        assertTrue(CaptureOutput.isMediaStore("media"))
+        assertTrue(CaptureOutput.isMediaStore("0@media"))
+        assertFalse(CaptureOutput.isMediaStore("com.example.notes.fileprovider"))
+        assertTrue(CaptureOutput.ownedBy(own, own))
+        assertFalse(CaptureOutput.ownedBy("com.example.notes", own))
+        assertFalse(CaptureOutput.ownedBy(null, own))
+    }
+
+    @Test fun anAddressInLensOwnPictureFolderIsNeverTaken() {
+        val granted = listOf("com.android.externalstorage.documents")
+        assertTrue(CaptureOutput.underOwnGrant("com.android.externalstorage.documents", granted))
+        assertTrue(CaptureOutput.underOwnGrant("0@com.android.externalstorage.documents", granted))
+        assertFalse(CaptureOutput.underOwnGrant("com.example.notes.fileprovider", granted))
+        assertFalse(CaptureOutput.underOwnGrant("com.android.externalstorage.documents", emptyList()))
+        assertFalse(CaptureOutput.underOwnGrant(null, granted))
+    }
+
     @Test fun aPictureForAnotherAppNeverCarriesLocation() {
         for (action in listOf(
             "android.media.action.IMAGE_CAPTURE",
