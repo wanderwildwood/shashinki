@@ -52,10 +52,6 @@ android {
             // the vendor's camera stack by reflection, and R8 removes what it cannot see used.
             isMinifyEnabled = false
             isShrinkResources = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
             realSigningConfig?.let { signingConfig = it }
 
             // AGP stamps the git revision into META-INF. The build box works from an rsync
