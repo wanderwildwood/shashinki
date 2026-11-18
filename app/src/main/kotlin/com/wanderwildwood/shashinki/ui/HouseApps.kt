@@ -23,6 +23,7 @@ object HouseApps {
     const val PASSWORDS = "com.wanderwildwood.aikotoba"
     const val WALLET = "com.wanderwildwood.satsuire"
     const val PICTURES = "com.wanderwildwood.garo"
+    const val CONNECTIONS = "com.wanderwildwood.enishi"
 
     /** SHA-256 of the certificate each app's releases are signed with, lower-case hex (read from its release APK). */
     val RELEASE_CERTS_SHA256 = mapOf(
@@ -31,6 +32,7 @@ object HouseApps {
         PASSWORDS to "9b9fbd10920e2c8a94609f3aa9a1bb11213e36d5d21b53c973de11033fba25e1",
         WALLET to "e8dd0e8acf311e519c336dc5898acb0eba0eb627b51306cf3cdb594c3ffdd637",
         PICTURES to "fb01c054c1e349eb5df5937c7e6c4968824dd719ada7566342dfcb1a562d96c5",
+        CONNECTIONS to "def146af0a169328cee14b3cb40db62f8d352fadf1e20371dbcf68018c8a5c5b",
     )
 
     /** The debug certificates of the build box and the desk machine; heard only by a debuggable build. */

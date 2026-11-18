@@ -7,7 +7,7 @@ import org.junit.Test
 
 class HouseAppsTest {
 
-    private val all = listOf(HouseApps.MEMO, HouseApps.DATEBOOK, HouseApps.PASSWORDS, HouseApps.WALLET, HouseApps.PICTURES)
+    private val all = listOf(HouseApps.MEMO, HouseApps.DATEBOOK, HouseApps.PASSWORDS, HouseApps.WALLET, HouseApps.PICTURES, HouseApps.CONNECTIONS)
 
     @Test fun everyAppHasItsReleaseCertificate() {
         assertEquals(all.toSet(), HouseApps.RELEASE_CERTS_SHA256.keys)
@@ -39,5 +39,13 @@ class HouseAppsTest {
         assertFalse(HouseApps.trusted(HouseApps.MEMO, listOf(debug), debuggable = false))
         assertTrue(HouseApps.trusted(HouseApps.MEMO, listOf(debug), debuggable = true))
         assertTrue(HouseApps.trusted(HouseApps.DATEBOOK, listOf(debug), debuggable = true))
+    }
+
+    @Test fun connectionsIsTrustedOnlyWithItsOwnCertificate() {
+        val release = "def146af0a169328cee14b3cb40db62f8d352fadf1e20371dbcf68018c8a5c5b"
+        assertEquals("com.wanderwildwood.enishi", HouseApps.CONNECTIONS)
+        assertEquals(release, HouseApps.RELEASE_CERTS_SHA256.getValue(HouseApps.CONNECTIONS))
+        assertTrue(HouseApps.trusted(HouseApps.CONNECTIONS, listOf(release), debuggable = false))
+        assertFalse(HouseApps.trusted(HouseApps.CONNECTIONS, listOf(HouseApps.RELEASE_CERTS_SHA256.getValue(HouseApps.MEMO)), debuggable = false))
     }
 }
