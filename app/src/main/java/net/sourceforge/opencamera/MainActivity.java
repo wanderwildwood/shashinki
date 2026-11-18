@@ -858,6 +858,10 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                 Log.d(TAG, "launching from photo intent");
             applicationInterface.setVideoPref(false);
         }
+        else if( com.wanderwildwood.shashinki.ui.ScanRequest.ACTION.equals(action) ) {
+            // shashinki: codes are read only in photo mode, so a scan another app asks for opens there
+            applicationInterface.setVideoPref(false);
+        }
         else if( (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && MyTileService.TILE_ID.equals(action)) || ACTION_SHORTCUT_CAMERA.equals(action) ) {
             if( MyDebug.LOG )
                 Log.d(TAG, "launching from quick settings tile or application shortcut for Open Camera: photo mode");
