@@ -1740,6 +1740,11 @@ public class MyApplicationInterface extends BasicApplicationInterface {
      *  the CameraController is set up, and we don't always re-setup the camera when switching between photo and video modes.
      */
     public PhotoMode getPhotoMode() {
+        // shashinki: a photo another app asked for is one plain picture, whatever mode was left on;
+        // the strip hides the modes there, so none may be in use unseen
+        String action = main_activity.getIntent().getAction();
+        if( MediaStore.ACTION_IMAGE_CAPTURE.equals(action) || MediaStore.ACTION_IMAGE_CAPTURE_SECURE.equals(action) )
+            return PhotoMode.Standard;
         String photo_mode_pref = sharedPreferences.getString(PreferenceKeys.PhotoModePreferenceKey, "preference_photo_mode_std");
 		/*if( MyDebug.LOG )
 			Log.d(TAG, "photo_mode_pref: " + photo_mode_pref);*/
