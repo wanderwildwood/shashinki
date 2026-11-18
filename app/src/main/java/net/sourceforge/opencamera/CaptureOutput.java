@@ -19,7 +19,8 @@ import java.util.List;
  * and never one of Lens's own providers. Nor an address Lens could write even without that app's
  * leave: a photo or video Lens saved itself (Android lets the app that made a media-store item
  * write to it) or anything in the folder Lens was given for its own pictures. Any other address
- * is ignored.
+ * is ignored: a video is then saved where Lens saves its own and handed back from there, and a
+ * photo goes back only as a small preview in the result and is not kept.
  */
 public final class CaptureOutput {
 

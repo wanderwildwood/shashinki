@@ -53,7 +53,8 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
   first code read goes straight back to the app that asked.
 - **Other apps can ask it for a photo or video**, the way they would ask the phone's own
   camera, and get the picture back. When the app gives an address to save it to, Lens writes only
-  to that address; otherwise the picture is saved to the folder below and handed back from there.
+  to that address. Without one, a video is saved to the folder below and handed back from there,
+  and a photo goes back to the app only as a small preview and is not kept.
 - **Read code** in the share sheet reads a code out of a picture — a screenshot of a ticket, a
   photo of a poster — and shows it on the same screen.
 - **Twelve settings**: reading codes, picture size, video size, steady video, picture quality, a
