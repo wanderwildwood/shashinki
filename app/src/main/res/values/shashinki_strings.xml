@@ -31,6 +31,11 @@
     <!-- When the camera cannot be opened. On a Kompakt the usual cause is the switch on the left side -->
     <string name="shashinki_camera_stopped">The camera stopped working. Leave the app and open it again to restart it.</string>
     <string name="shashinki_photo_failed">That photo could not be taken. Try again.</string>
+    <string name="shashinki_photo_not_saved">That photo could not be saved. Check that the phone has free space, then try again.</string>
+    <string name="shashinki_video_failed">The video could not be recorded. Try again.</string>
+    <string name="shashinki_video_may_be_damaged">The video stopped with an error and may not play.</string>
+    <string name="shashinki_video_no_space">There is not enough free space to record a video.</string>
+    <string name="shashinki_preview_failed">The camera could not start. Leave the app and open it again.</string>
     <!-- Shown over the viewfinder when the camera was refused, with a button to put it right -->
     <string name="shashinki_permission_camera">Lens cannot show anything until it is allowed to use the phone\'s camera.</string>
     <string name="shashinki_allow_camera">Allow the camera</string>

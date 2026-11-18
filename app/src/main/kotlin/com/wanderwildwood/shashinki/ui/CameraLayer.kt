@@ -169,11 +169,28 @@ object CameraLayer {
 
     private const val BLINK_MS = 180L
 
+    /** True while [trouble] is about a photo or video already lost: the camera opening again does not end it. */
+    private var troubleKept = false
+
     /** Called by Open Camera's error hooks: the camera stopped, or a photo failed. */
     @JvmStatic
     fun trouble(message: Int) {
         Handler(Looper.getMainLooper()).post {
             trouble = message
+            troubleKept = false
+            capturing = false
+        }
+    }
+
+    /**
+     * Called when a photo or video was not saved. Said until the shutter is next pressed: the
+     * camera often reopens right after such a failure, and the person must still learn of it.
+     */
+    @JvmStatic
+    fun lost(message: Int) {
+        Handler(Looper.getMainLooper()).post {
+            trouble = message
+            troubleKept = true
             capturing = false
         }
     }
@@ -250,7 +267,7 @@ object CameraLayer {
     @JvmStatic
     fun cameraReady() {
         Handler(Looper.getMainLooper()).post {
-            trouble = null
+            if (!troubleKept) trouble = null
             refresh()
         }
     }

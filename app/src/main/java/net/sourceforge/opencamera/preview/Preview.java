@@ -6303,6 +6303,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 videoFileInfo = new VideoFileInfo();
                 applicationInterface.cameraInOperation(false, true);
                 this.reconnectCamera(true);
+                com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_video_no_space); // shashinki: toasts are off
                 this.showToast(null, R.string.video_no_free_space);
             }
         }

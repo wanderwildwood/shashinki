@@ -2183,16 +2183,19 @@ public class ImageSaver extends Thread {
         }
         catch(FileNotFoundException e) {
             MyDebug.logStackTrace(TAG, "file not found", e);
+            com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo);
         }
         catch(IOException e) {
             MyDebug.logStackTrace(TAG, "I/O error writing file", e);
+            com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo);
         }
         catch(SecurityException e) {
             // received security exception from copyFileToUri()->openOutputStream() from Google Play
             // update: no longer have copyFileToUri() (as no longer use temporary files for SAF), but might as well keep this
             MyDebug.logStackTrace(TAG, "security exception writing file", e);
+            com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo);
         }
 
@@ -2506,10 +2509,12 @@ public class ImageSaver extends Thread {
         }
         catch(FileNotFoundException e) {
             MyDebug.logStackTrace(TAG, "file not found", e);
+            com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo_raw);
         }
         catch(IOException e) {
             MyDebug.logStackTrace(TAG, "ioexception writing raw image file", e);
+            com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo_raw);
         }
         finally {

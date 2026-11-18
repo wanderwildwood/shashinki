@@ -2744,6 +2744,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
 
     @Override
     public void onFailedStartPreview() {
+        com.wanderwildwood.shashinki.ui.CameraLayer.trouble(R.string.shashinki_preview_failed); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, R.string.failed_to_start_camera_preview);
         main_activity.enablePausePreviewOnBackPressedCallback(false); // reenable standard back button behaviour (in case preview was paused due to option to pause preview after taking a photo)
     }
@@ -2771,6 +2772,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
                 Log.d(TAG, "error: server died");
             message_id = R.string.video_error_server_died;
         }
+        com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_video_failed); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, message_id);
         // in versions 1.24 and 1.24, there was a bug where we had "info_" for onVideoError and "error_" for onVideoInfo!
         // fixed in 1.25; also was correct for 1.23 and earlier
@@ -2792,6 +2794,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
         else {
             error_message = getContext().getResources().getString(R.string.failed_to_record_video);
         }
+        com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_video_failed); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, error_message);
     }
 
@@ -2805,6 +2808,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
         if( !features.isEmpty() ) {
             error_message += ", " + features + " " + getContext().getResources().getString(R.string.not_supported);
         }
+        com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_video_may_be_damaged); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, error_message);
     }
 
@@ -2817,6 +2821,7 @@ public class MyApplicationInterface extends BasicApplicationInterface {
     public void onFailedCreateVideoFileError() {
         if( MyDebug.LOG )
             Log.d(TAG, "onFailedCreateVideoFileError");
+        com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_video_failed); // shashinki: toasts are off
         main_activity.getPreview().showToast(null, R.string.failed_to_save_video);
     }
 
