@@ -476,18 +476,35 @@ object CameraLayer {
     internal val BAR: Dp = 96.dp
 
     /**
-     * Opens the settings as the bar's settings button does; set only while the camera's own
-     * screen is up, so nothing opens over a code being shown or settings already open.
+     * Opens the settings as the bar's settings button does, one per window; set only while the
+     * camera's own screen is up, so nothing opens over a code being shown or settings already
+     * open. Kept per window: a photo or scan asked for by another app opens a second one, and
+     * its going must not take the first window's away.
      */
-    internal var openSettings: (() -> Unit)? = null
+    private val openers = java.util.WeakHashMap<MainActivity, () -> Unit>()
+
+    internal fun setOpener(activity: MainActivity, opener: () -> Unit) {
+        openers[activity] = opener
+    }
+
+    internal fun clearOpener(activity: MainActivity, opener: () -> Unit) {
+        if (openers[activity] === opener) openers.remove(activity)
+    }
+
+    /**
+     * True while a photo is being taken or the self-timer counts down: opening settings then
+     * would close the camera and lose the photo (an HDR+ or Night burst takes a second or so).
+     */
+    internal fun busy(activity: MainActivity): Boolean =
+        capturing || activity.preview?.isTakingPhotoOrOnTimer == true
 
     /**
      * The hardware Menu key: the same settings as the bar's button, not Open Camera's own. Not
-     * while recording, when the button is not there either.
+     * while recording, when the button is not there either, nor while a photo is being taken.
      */
     @JvmStatic
-    fun menuKey() {
-        if (!snapshot.recording) openSettings?.invoke()
+    fun menuKey(activity: MainActivity) {
+        if (!snapshot.recording && !busy(activity)) openers[activity]?.invoke()
     }
 }
 
@@ -496,7 +513,8 @@ private fun Camera(activity: MainActivity) {
     var settingsOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     // Over the lock screen, settings wait for the unlock: the camera may be used without it,
     // the settings (where pictures go, what is kept with them) may not.
-    val openSettings = {
+    val openSettings = open@{
+        if (CameraLayer.busy(activity)) return@open
         net.sourceforge.opencamera.KeyguardUtils.requireKeyguard(activity) {
             CameraLayer.panelOpened(activity)
             settingsOpen = true
@@ -565,8 +583,8 @@ private fun Camera(activity: MainActivity) {
     }
 
     DisposableEffect(Unit) {
-        CameraLayer.openSettings = openSettings
-        onDispose { CameraLayer.openSettings = null }
+        CameraLayer.setOpener(activity, openSettings)
+        onDispose { CameraLayer.clearOpener(activity, openSettings) }
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -701,7 +719,7 @@ private fun Camera(activity: MainActivity) {
                 Spacer(Modifier.width(8.dp))
             }
             if (!shot.recording) {
-                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings), onClick = openSettings)
+                BarIcon(Icons.Settings, stringResource(R.string.shashinki_cd_settings), enabled = !CameraLayer.capturing && !shot.onTimer, onClick = openSettings)
             }
         }
 
@@ -784,8 +802,8 @@ private fun Mode(label: String, chosen: Boolean, enabled: Boolean, toggle: Boole
 
 /** A 48dp press with a 22dp glyph, the size every top bar in this shop uses. */
 @Composable
-private fun BarIcon(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.size(48.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+private fun BarIcon(icon: ImageVector, description: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Box(Modifier.size(48.dp).clickable(enabled = enabled, onClick = onClick), contentAlignment = Alignment.Center) {
         Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
     }
 }

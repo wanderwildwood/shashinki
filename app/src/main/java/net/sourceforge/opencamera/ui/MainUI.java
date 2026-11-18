@@ -2643,7 +2643,7 @@ public class MainUI {
                 // tested successfully on Samsung S3 (via RTL)
                 // see http://stackoverflow.com/questions/8264611/how-to-detect-when-user-presses-menu-key-on-their-android-device
                 // shashinki: the settings the bar's button opens, not Open Camera's own
-                com.wanderwildwood.shashinki.ui.CameraLayer.menuKey();
+                com.wanderwildwood.shashinki.ui.CameraLayer.menuKey(main_activity);
                 return true;
             }
             case KeyEvent.KEYCODE_CAMERA:
