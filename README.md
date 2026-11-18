@@ -45,8 +45,9 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
   "save this network", Contacts, Email, Messaging, a map; a product or book barcode is looked
   up on the web. **Save to Wallet** keeps the code as a card in Wallet (札入 satsuire), where it
   is on the phone, to show to a scanner or open again. A two-step sign-in code offers **Add to
-  Passwords** (合言葉 aikotoba) instead, where it is on the phone. Nothing opens until a button
-  is pressed. Copy is always there. Reading can be turned off.
+  Passwords** (合言葉 aikotoba) instead, where it is on the phone; since it holds the account's
+  secret, it is not drawn again and has no Copy. Nothing opens until a button is pressed. Every
+  other code can be copied. Reading can be turned off.
 - **Other apps can ask it to scan.** It answers the request ZXing's Barcode Scanner made the
   custom (`com.google.zxing.client.android.SCAN`): the camera opens with the square up, and the
   first code read goes straight back to the app that asked.

@@ -96,11 +96,17 @@ data class Found(
     /** The button's word, and what it does; null where there is nothing to open, only to copy. */
     val action: Int?,
     val intent: Intent?,
-    /** Bound for Passwords: a secret, so not offered to Wallet as well. */
+    /**
+     * A two-step sign-in code, which holds its secret: not drawn again on screen, not offered to
+     * copy, not offered to Wallet. It goes only to the authenticator.
+     */
     val signIn: Boolean = false,
     /** The kind of code it was read from, so it is drawn again as the same kind. */
     val format: BarcodeFormat = BarcodeFormat.QR_CODE,
-)
+) {
+    /** Drawn again on the code's screen, and offered to copy: everything but a sign-in code. */
+    val showsCode: Boolean get() = !signIn
+}
 
 internal fun describe(context: Context, result: Result): Found =
     // Whatever a code holds, a failure to make sense of it leaves its text to copy, not a crash.
@@ -256,7 +262,7 @@ private fun signIn(context: Context, text: String): Found {
     val view = Intent(Intent.ACTION_VIEW, uri)
     val passwords = Intent(view).setPackage(PASSWORDS).takeIf { it.resolveActivity(context.packageManager) != null }
     return if (passwords != null) Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_add_passwords, passwords, signIn = true)
-    else Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_open, view.takeIf { it.resolveActivity(context.packageManager) != null })
+    else Found(text, R.string.qr_kind_sign_in, shown, R.string.qr_open, view.takeIf { it.resolveActivity(context.packageManager) != null }, signIn = true)
 }
 
 /**
@@ -357,7 +363,8 @@ internal fun QrWatch(
 @Composable
 internal fun QrScreen(found: Found, onClose: () -> Unit) {
     val context = LocalContext.current
-    val drawn = remember(found.raw) { draw(found.raw, found.format) }
+    // A sign-in code's secret is neither drawn again nor copied: it goes only to the authenticator.
+    val drawn = remember(found.raw) { if (found.showsCode) draw(found.raw, found.format) else null }
     val wallet = remember(found.raw) { if (found.signIn) null else walletIntent(context) }
     // What the last press did or could not do ("Copied", no app to open it), in words under the
     // code. It stays until the next press: a toast on this panel could be gone before it was read.
@@ -461,7 +468,7 @@ internal fun QrScreen(found: Found, onClose: () -> Unit) {
                     })
                 }
             }
-            item {
+            if (found.showsCode) item {
                 Choice(stringResource(R.string.qr_copy), then {
                     val clip = context.getSystemService(ClipboardManager::class.java)
                     clip?.setPrimaryClip(ClipData.newPlainText(null, found.raw))
