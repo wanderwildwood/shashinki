@@ -136,8 +136,9 @@ internal fun describe(context: Context, parsed: ParsedResult): Found {
             }
             // A web address is checked for a browser. Any other scheme is offered as it is: this
             // app can only see the handlers of the schemes its manifest names, and the press
-            // already says so when nothing answers.
-            val view = Intent(Intent.ACTION_VIEW, uri)
+            // already says so when nothing answers. Only to apps that take such links from a
+            // browser too, never to a screen inside an app that was not meant to be opened so.
+            val view = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
             Found(raw, kind, parsed.uri, R.string.qr_open, if (kind == R.string.qr_kind_web) ifAnyone(view) else view)
         }
         is WifiParsedResult -> {
