@@ -234,7 +234,8 @@ private fun event(context: Context, raw: String, parsed: CalendarParsedResult): 
         parsed.summary?.takeIf { it.isNotBlank() },
         if (begin > 0) DateUtils.formatDateTime(context, begin, flags) else null,
     ).joinToString("\n").ifEmpty { raw }
-    val datebook = Intent(add).setPackage(DATEBOOK).takeIf { it.resolveActivity(context.packageManager) != null }
+    // Datebook by name only when it is the real one (HouseApps); otherwise any calendar, as with none.
+    val datebook = HouseApps.aimed(context, add, DATEBOOK)
     return if (datebook != null) Found(raw, R.string.qr_kind_event, shown, R.string.qr_add_datebook, datebook)
     else Found(raw, R.string.qr_kind_event, shown, R.string.qr_add_calendar, add.takeIf { it.resolveActivity(context.packageManager) != null })
 }
@@ -550,4 +551,4 @@ private val QR_SIZE = 208.dp
 private const val SHARED_PX = 600
 private const val WALLET = HouseApps.WALLET
 private const val PASSWORDS = HouseApps.PASSWORDS
-private const val DATEBOOK = "com.wanderwildwood.koyomi"
+private const val DATEBOOK = HouseApps.DATEBOOK

@@ -1,33 +1,43 @@
 package com.wanderwildwood.shashinki.ui
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HouseAppsTest {
 
-    private val other = "00".repeat(32)
+    private val all = listOf(HouseApps.MEMO, HouseApps.DATEBOOK, HouseApps.PASSWORDS, HouseApps.WALLET, HouseApps.PICTURES)
 
-    @Test fun eachAppOnlyByItsOwnReleaseCertificate() {
-        for (pkg in listOf(HouseApps.PASSWORDS, HouseApps.WALLET, HouseApps.PICTURES)) {
+    @Test fun everyAppHasItsReleaseCertificate() {
+        assertEquals(all.toSet(), HouseApps.RELEASE_CERTS_SHA256.keys)
+        for (cert in HouseApps.RELEASE_CERTS_SHA256.values) assertTrue(cert, Regex("[0-9a-f]{64}").matches(cert))
+        assertEquals("certificates are told apart", all.size, HouseApps.RELEASE_CERTS_SHA256.values.toSet().size)
+    }
+
+    @Test fun onlyTheAppsOwnReleaseCertificateIsTrusted() {
+        val other = "00".repeat(32)
+        for (pkg in all) {
             val release = HouseApps.RELEASE_CERTS_SHA256.getValue(pkg)
             assertTrue(pkg, HouseApps.trusted(pkg, listOf(release), debuggable = false))
-            // An app that took the name with another key, or none we could read.
+            // An app that took the name with another key, or none that could be read.
             assertFalse(pkg, HouseApps.trusted(pkg, listOf(other), debuggable = false))
             assertFalse(pkg, HouseApps.trusted(pkg, emptyList(), debuggable = false))
+            // Signed with the app's key and another as well.
             assertFalse(pkg, HouseApps.trusted(pkg, listOf(release, other), debuggable = false))
         }
     }
 
-    @Test fun oneAppsCertificateDoesNotVouchForAnother() {
-        val wallet = HouseApps.RELEASE_CERTS_SHA256.getValue(HouseApps.WALLET)
-        assertFalse(HouseApps.trusted(HouseApps.PASSWORDS, listOf(wallet), debuggable = false))
-        assertFalse(HouseApps.trusted("com.example.notes", listOf(wallet), debuggable = true))
+    @Test fun oneAppsCertificateDoesNotStandForAnother() {
+        val memo = HouseApps.RELEASE_CERTS_SHA256.getValue(HouseApps.MEMO)
+        assertFalse(HouseApps.trusted(HouseApps.DATEBOOK, listOf(memo), debuggable = false))
+        assertFalse(HouseApps.trusted("com.example.notes", listOf(memo), debuggable = true))
     }
 
     @Test fun debugKeysOnlyInADebugBuild() {
-        val debug = FilesPicker.DEBUG_CERTS_SHA256.first()
-        assertFalse(HouseApps.trusted(HouseApps.PASSWORDS, listOf(debug), debuggable = false))
-        assertTrue(HouseApps.trusted(HouseApps.PASSWORDS, listOf(debug), debuggable = true))
+        val debug = HouseApps.DEBUG_CERTS_SHA256.first()
+        assertFalse(HouseApps.trusted(HouseApps.MEMO, listOf(debug), debuggable = false))
+        assertTrue(HouseApps.trusted(HouseApps.MEMO, listOf(debug), debuggable = true))
+        assertTrue(HouseApps.trusted(HouseApps.DATEBOOK, listOf(debug), debuggable = true))
     }
 }
