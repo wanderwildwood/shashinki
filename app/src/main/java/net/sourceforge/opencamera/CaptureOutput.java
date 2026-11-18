@@ -20,7 +20,7 @@ import java.util.List;
  * leave: a photo or video Lens saved itself (Android lets the app that made a media-store item
  * write to it) or anything in the folder Lens was given for its own pictures. Any other address
  * is ignored: a video is then saved where Lens saves its own and handed back from there, and a
- * photo goes back only as a small preview in the result and is not kept.
+ * photo is saved there too while only a small preview goes back in the result.
  */
 public final class CaptureOutput {
 

@@ -1825,6 +1825,45 @@ public class ImageSaver extends Thread {
         }
     }
 
+    /** shashinki: the small preview handed back to an app that asked for a photo without giving an
+     *  address (reduced to 128 pixels wide, ~50k pixels). The full bitmap, when given, is left
+     *  untouched, since the photo is still saved from it; null if no bitmap could be made.
+     */
+    private static Bitmap inlinePreview(Bitmap bitmap, byte [] data) {
+        boolean own_bitmap = false;
+        if( bitmap == null ) {
+            if( MyDebug.LOG )
+                Log.d(TAG, "create bitmap");
+            // bitmap we return doesn't need to be mutable
+            bitmap = ImageUtils.loadBitmapWithRotation(data, false);
+            own_bitmap = true;
+        }
+        if( bitmap == null ) {
+            return null;
+        }
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        if( MyDebug.LOG )
+            Log.d(TAG, "decoded bitmap size " + width + ", " + height);
+        final int small_size_c = 128;
+        if( width <= small_size_c ) {
+            return bitmap;
+        }
+        float scale = ((float)small_size_c)/(float)width;
+        if( MyDebug.LOG )
+            Log.d(TAG, "scale to " + scale);
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale, scale);
+        Bitmap preview = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        // careful, as preview is sometimes not a copy!
+        if( own_bitmap && preview != bitmap ) {
+            bitmap.recycle();
+        }
+        if( MyDebug.LOG )
+            Log.d(TAG, "returned bitmap size " + preview.getWidth() + ", " + preview.getHeight());
+        return preview;
+    }
+
     /** Converts from Request.ImageFormat to Bitmap.CompressFormat.
      */
     private static Bitmap.CompressFormat getBitmapCompressFormat(Request.ImageFormat image_format) {
@@ -1905,73 +1944,36 @@ public class ImageSaver extends Thread {
         Uri saveUri = null;
         boolean use_media_store = false;
         ContentValues contentValues = null; // used if using scoped storage
+        boolean inline_result = false; // shashinki: a preview went back in the result; the photo is saved as usual
         try {
             if( !raw_only ) {
                 PostProcessing.PostProcessBitmapResult postProcessBitmapResult = postProcessing.postProcessBitmap(request, data, bitmap, ignore_exif_orientation);
                 bitmap = postProcessBitmapResult.bitmap;
             }
 
+            if( !raw_only && request.image_capture_intent && request.image_capture_intent_uri == null ) {
+                // shashinki: the intent doesn't contain an URI (or not one Lens will write to), so send
+                // a small preview as a parcel (reduced to ~50k pixels), and still keep the full photo
+                // in Lens's own folder below, so a picture the person took is never lost
+                inline_result = true;
+                if( MyDebug.LOG )
+                    Log.d(TAG, "sent to intent via parcel");
+                Bitmap preview = inlinePreview(bitmap, data);
+                if( preview != null )
+                    main_activity.setResult(Activity.RESULT_OK, new Intent("inline-data").putExtra("data", preview));
+                else if( MyDebug.LOG )
+                    Log.e(TAG, "no bitmap created");
+            }
+
             if( raw_only ) {
                 // don't save the JPEG
                 success = true;
             }
-            else if( request.image_capture_intent ) {
+            else if( request.image_capture_intent && request.image_capture_intent_uri != null ) {
+                // Save the bitmap to the specified URI (use a try/catch block)
                 if( MyDebug.LOG )
-                    Log.d(TAG, "image_capture_intent");
-                if( request.image_capture_intent_uri != null )
-                {
-                    // Save the bitmap to the specified URI (use a try/catch block)
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "save to: " + request.image_capture_intent_uri);
-                    saveUri = request.image_capture_intent_uri;
-                }
-                else
-                {
-                    // If the intent doesn't contain an URI, send the bitmap as a parcel
-                    // (it is a good idea to reduce its size to ~50k pixels before)
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "sent to intent via parcel");
-                    if( bitmap == null ) {
-                        if( MyDebug.LOG )
-                            Log.d(TAG, "create bitmap");
-                        // bitmap we return doesn't need to be mutable
-                        bitmap = ImageUtils.loadBitmapWithRotation(data, false);
-                    }
-                    if( bitmap != null ) {
-                        int width = bitmap.getWidth();
-                        int height = bitmap.getHeight();
-                        if( MyDebug.LOG ) {
-                            Log.d(TAG, "decoded bitmap size " + width + ", " + height);
-                            Log.d(TAG, "bitmap size: " + width*height*4);
-                        }
-                        final int small_size_c = 128;
-                        if( width > small_size_c ) {
-                            float scale = ((float)small_size_c)/(float)width;
-                            if( MyDebug.LOG )
-                                Log.d(TAG, "scale to " + scale);
-                            Matrix matrix = new Matrix();
-                            matrix.postScale(scale, scale);
-                            Bitmap new_bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
-                            // careful, as new_bitmap is sometimes not a copy!
-                            if( new_bitmap != bitmap ) {
-                                bitmap.recycle();
-                                bitmap = new_bitmap;
-                            }
-                        }
-                    }
-                    if( MyDebug.LOG ) {
-                        if( bitmap != null ) {
-                            Log.d(TAG, "returned bitmap size " + bitmap.getWidth() + ", " + bitmap.getHeight());
-                            Log.d(TAG, "returned bitmap size: " + bitmap.getWidth()*bitmap.getHeight()*4);
-                        }
-                        else {
-                            Log.e(TAG, "no bitmap created");
-                        }
-                    }
-                    if( bitmap != null )
-                        main_activity.setResult(Activity.RESULT_OK, new Intent("inline-data").putExtra("data", bitmap));
-                    main_activity.finish();
-                }
+                    Log.d(TAG, "save to: " + request.image_capture_intent_uri);
+                saveUri = request.image_capture_intent_uri;
             }
             else if( storageUtils.isUsingSAF() ) {
                 saveUri = storageUtils.createOutputMediaFileSAF(StorageUtils.MEDIA_TYPE_IMAGE, filename_suffix, extension, request.current_date);
@@ -2142,7 +2144,7 @@ public class ImageSaver extends Thread {
                     main_activity.test_last_saved_image = picFile.getAbsolutePath();
                 }
 
-                if( request.image_capture_intent ) {
+                if( request.image_capture_intent && !inline_result ) {
                     if( MyDebug.LOG )
                         Log.d(TAG, "finish activity due to being called from intent");
                     main_activity.setResult(Activity.RESULT_OK);
@@ -2197,6 +2199,14 @@ public class ImageSaver extends Thread {
             MyDebug.logStackTrace(TAG, "security exception writing file", e);
             com.wanderwildwood.shashinki.ui.CameraLayer.lost(R.string.shashinki_photo_not_saved); // shashinki: toasts are off
             main_activity.getPreview().showToast(null, R.string.failed_to_save_photo);
+        }
+
+        if( inline_result ) {
+            // shashinki: the preview is already in the result; go back to the app that asked,
+            // whether or not the full photo could be kept
+            if( MyDebug.LOG )
+                Log.d(TAG, "finish activity due to being called from intent");
+            main_activity.finish();
         }
 
         // I have received crashes where camera_controller was null - could perhaps happen if this thread was running just as the camera is closing?
