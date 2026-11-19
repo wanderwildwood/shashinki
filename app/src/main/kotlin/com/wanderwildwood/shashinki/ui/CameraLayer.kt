@@ -343,9 +343,11 @@ object CameraLayer {
      * have changed — the camera opening, video starting or stopping, the mode switching.
      */
     /**
-     * Put the viewfinder in the middle of the space above the bars, shrunk if it would not fit
-     * there. Open Camera centres it on the whole screen, which on the Kompakt left a black strip
-     * above it and hid as much again under the bars.
+     * Put the viewfinder in the middle of the space above the bars, as wide as the screen. Open
+     * Camera centres it on the whole screen, which on the Kompakt left a black strip above it and
+     * hid as much again under the bars; shrinking it to fit left black strips at the sides
+     * instead. Filled to the width, the top and bottom of the picture run under the edges here,
+     * but the photo keeps them.
      */
     private fun place(activity: MainActivity) {
         val frame = activity.findViewById<ViewGroup>(R.id.preview) ?: return
@@ -353,7 +355,7 @@ object CameraLayer {
         val width = root.width - root.paddingLeft - root.paddingRight
         val height = root.height - root.paddingTop - root.paddingBottom
         if (frame.width <= 0 || frame.height <= 0 || width <= 0 || height <= 0) return
-        val scale = minOf(width.toFloat() / frame.width, height.toFloat() / frame.height, 1f)
+        val scale = width.toFloat() / frame.width
         val dx = root.paddingLeft + width / 2f - (frame.left + frame.width / 2f)
         val dy = root.paddingTop + height / 2f - (frame.top + frame.height / 2f)
         if (frame.scaleX != scale) frame.scaleX = scale
