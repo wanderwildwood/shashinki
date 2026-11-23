@@ -15,7 +15,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import net.sourceforge.opencamera.LocationSupplier;
-import net.sourceforge.opencamera.MyPreferenceFragment;
 import net.sourceforge.opencamera.TestUtils;
 import net.sourceforge.opencamera.cameracontroller.CameraController2;
 import net.sourceforge.opencamera.HDRProcessor;
@@ -10373,59 +10372,6 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         View galleryButton = mActivity.findViewById(net.sourceforge.opencamera.R.id.gallery);
         clickView(galleryButton);
 
-    }
-
-    /* Tests going to settings, and back.
-     */
-    public void testSettings() throws InterruptedException {
-        Log.d(TAG, "testSettings");
-        setToDefault();
-
-        restart(false); // so we test going to settings even without waiting for preview to start (for Camera2 API)
-
-        assertFalse(mActivity.isCameraInBackground());
-        View settingsButton = mActivity.findViewById(net.sourceforge.opencamera.R.id.settings);
-        clickView(settingsButton);
-        this.getInstrumentation().waitForIdleSync();
-        assertTrue(mActivity.isCameraInBackground());
-
-        Thread.sleep(500);
-        mActivity.runOnUiThread(new Runnable() {
-            public void run() {
-                Log.d(TAG, "on back pressed...");
-                mActivity.onBackPressed();
-            }
-        });
-        // need to wait for UI code to finish before leaving
-        this.getInstrumentation().waitForIdleSync();
-        Thread.sleep(500);
-
-        // check preview starts up
-        waitUntilPreviewStarted();
-    }
-
-    /* Tests going to settings and opening the privacy policy window.
-     */
-    public void testSettingsPrivacyPolicy() throws InterruptedException {
-        Log.d(TAG, "testSettingsPrivacyPolicy");
-        setToDefault();
-
-        assertFalse(mActivity.isCameraInBackground());
-        View settingsButton = mActivity.findViewById(net.sourceforge.opencamera.R.id.settings);
-        clickView(settingsButton);
-        this.getInstrumentation().waitForIdleSync();
-        assertTrue(mActivity.isCameraInBackground());
-        Thread.sleep(500);
-
-        mActivity.runOnUiThread(new Runnable() {
-            public void run() {
-                MyPreferenceFragment fragment = mActivity.getPreferenceFragment();
-                assertNotNull(fragment);
-                fragment.clickedPrivacyPolicy();
-            }
-        });
-        getInstrumentation().waitForIdleSync();
-        Thread.sleep(1000);
     }
 
     /* Tests save and load settings.

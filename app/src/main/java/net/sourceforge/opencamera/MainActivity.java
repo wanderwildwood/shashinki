@@ -30,7 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import android.Manifest;
-import android.app.Fragment;
 import android.content.pm.PackageInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -52,8 +51,6 @@ import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.animation.ArgbEvaluator;
@@ -62,7 +59,6 @@ import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -107,7 +103,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 /** The main Activity for Open Camera.
  */
-public class MainActivity extends AppCompatActivity implements PreferenceFragment.OnPreferenceStartFragmentCallback {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private static int activity_count = 0;
@@ -138,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
     private boolean supports_force_video_4k;
     private boolean supports_camera2;
     private SaveLocationHandler saveLocationHandler;
-    private boolean saf_dialog_from_preferences; // if a SAF dialog is opened, this records whether we opened it from the Preferences
     private boolean camera_in_background; // whether the camera is covered by a fragment/dialog (such as settings or folder picker)
     private GestureDetector gestureDetector;
     private boolean screen_is_locked; // whether screen is "locked" - this is Open Camera's own lock to guard against accidental presses, not the standard Android lock
@@ -184,11 +179,8 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
     static private final String ACTION_SHORTCUT_SELFIE = "net.sourceforge.opencamera.SHORTCUT_SELFIE";
     static private final String ACTION_SHORTCUT_VIDEO = "net.sourceforge.opencamera.SHORTCUT_VIDEO";
     static private final String ACTION_SHORTCUT_GALLERY = "net.sourceforge.opencamera.SHORTCUT_GALLERY";
-    static private final String ACTION_SHORTCUT_SETTINGS = "net.sourceforge.opencamera.SHORTCUT_SETTINGS";
 
     private static final int CHOOSE_SAVE_FOLDER_SAF_CODE = 42;
-    private static final int CHOOSE_GHOST_IMAGE_SAF_CODE = 43;
-    private static final int CHOOSE_LOAD_SETTINGS_SAF_CODE = 44;
 
     // for testing; must be volatile for test project reading the state
     // n.b., avoid using static, as static variables are shared between different instances of an application,
@@ -258,9 +250,13 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         com.wanderwildwood.shashinki.ui.CameraLayer.prepare(this); // shashinki: defaults before upstream reads them
 
         setContentView(R.layout.activity_main);
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false); // initialise any unset preferences to their default values
+        // shashinki: upstream called PreferenceManager.setDefaultValues(R.xml.preferences) here. That
+        // file belonged to its settings screen, which is gone; the only defaults it wrote
+        // (preference_face_detection false, preference_timer "0", preference_burst_mode "1",
+        // preference_burst_interval "0") are the same values the code falls back to when a key
+        // is absent, so nothing needs writing in its place.
         if( MyDebug.LOG )
-            Log.d(TAG, "onCreate: time after setting default preference values: " + (System.currentTimeMillis() - debug_time));
+            Log.d(TAG, "onCreate: time after setting content view: " + (System.currentTimeMillis() - debug_time));
 
         if( getIntent() != null && getIntent().getExtras() != null ) {
             // whether called from testing
@@ -333,15 +329,10 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
             setDeviceDefaults();
         }
 
-        boolean settings_is_open = settingsIsOpen();
-        if( MyDebug.LOG )
-            Log.d(TAG, "settings_is_open?: " + settings_is_open);
-        // settings_is_open==true can happen if application is recreated when settings is open
-        // to reproduce: go to settings, then turn screen off and on (and unlock)
-        if( !settings_is_open ) {
-            // set up window flags for normal operation
-            setWindowFlagsForCamera();
-        }
+        // set up window flags for normal operation
+        // (shashinki: upstream skipped this when recreated with its settings screen open; that
+        // screen is gone)
+        setWindowFlagsForCamera();
         if( MyDebug.LOG )
             Log.d(TAG, "onCreate: time after setting window flags: " + (System.currentTimeMillis() - debug_time));
 
@@ -377,11 +368,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         preview = new Preview(applicationInterface, (this.findViewById(R.id.preview)));
         if( MyDebug.LOG )
             Log.d(TAG, "onCreate: time after creating preview: " + (System.currentTimeMillis() - debug_time));
-
-        if( settings_is_open ) {
-            // must be done after creating preview
-            setWindowFlagsForSettings();
-        }
 
         {
             // don't show orientation animations
@@ -883,11 +869,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                 Log.d(TAG, "launching from application shortcut for Open Camera: gallery");
             applicationInterface.getStorageUtils().openGallery();
         }
-        else if( ACTION_SHORTCUT_SETTINGS.equals(action) ) {
-            if( MyDebug.LOG )
-                Log.d(TAG, "launching from application shortcut for Open Camera: settings");
-            KeyguardUtils.requireKeyguard(this, this::openSettings);
-        }
 
         Bundle extras = this.getIntent().getExtras();
         if( extras != null ) {
@@ -1119,23 +1100,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         startActivity(browserIntent);
     }
 
-    void launchOnlinePrivacyPolicy() {
-        if( MyDebug.LOG )
-            Log.d(TAG, "launchOnlinePrivacyPolicy");
-        // if we change this, remember that any page linked to must abide by Google Play developer policies!
-        //Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getOnlineHelpUrl("index.html#privacy")));
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getOnlineHelpUrl("privacy_oc.html")));
-        startActivity(browserIntent);
-    }
-
-    void launchOnlineLicences() {
-        if( MyDebug.LOG )
-            Log.d(TAG, "launchOnlineLicences");
-        // if we change this, remember that any page linked to must abide by Google Play developer policies!
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getOnlineHelpUrl("#licence")));
-        startActivity(browserIntent);
-    }
-
     /* Audio trigger - either loud sound, or speech recognition.
      * This performs some additional checks before taking a photo.
      */
@@ -1325,7 +1289,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         cancelImageSavingNotification();
 
         // Set black window background; also needed if we hide the virtual buttons in immersive mode
-        // Note that we do it here rather than customising the theme's android:windowBackground, so this doesn't affect other views - in particular, the MyPreferenceFragment settings
+        // Note that we do it here rather than customising the theme's android:windowBackground, so this doesn't affect other views
         getWindow().getDecorView().getRootView().setBackgroundColor(Color.BLACK);
 
         if( edge_to_edge_mode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM ) {
@@ -2402,12 +2366,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         mainUI.toggleExposureUI();
     }
 
-    public void clickedSettings(View view) {
-        if( MyDebug.LOG )
-            Log.d(TAG, "clickedSettings");
-        KeyguardUtils.requireKeyguard(this, this::openSettings);
-    }
-
     public boolean popupIsOpen() {
         return mainUI.popupIsOpen();
     }
@@ -2429,516 +2387,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         if( MyDebug.LOG )
             Log.d(TAG, "clickedPopupSettings");
         mainUI.togglePopupSettings();
-    }
-
-    private final PreferencesListener preferencesListener = new PreferencesListener();
-
-    /** Keeps track of changes to SharedPreferences.
-     */
-    class PreferencesListener implements SharedPreferences.OnSharedPreferenceChangeListener {
-        private static final String TAG = "PreferencesListener";
-
-        private boolean any_significant_change; // whether any changes that require updateForSettings have been made since startListening()
-        private boolean any_change; // whether any changes have been made since startListening()
-
-        void startListening() {
-            if( MyDebug.LOG )
-                Log.d(TAG, "startListening");
-            any_significant_change = false;
-            any_change = false;
-
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-            // n.b., registerOnSharedPreferenceChangeListener warns that we must keep a reference to the listener (which
-            // is this class) as long as we want to listen for changes, otherwise the listener may be garbage collected!
-            sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        }
-
-        void stopListening() {
-            if( MyDebug.LOG )
-                Log.d(TAG, "stopListening");
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
-        }
-
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if( MyDebug.LOG )
-                Log.d(TAG, "onSharedPreferenceChanged: " + key);
-
-            if( key == null ) {
-                // on Android 11+, when targetting Android 11+, this method is called with key==null
-                // if preferences are cleared (see testSettings(), or when doing "Reset settings")
-                return;
-            }
-
-            any_change = true;
-
-            switch( key ) {
-                // we whitelist preferences where we're sure that we don't need to call updateForSettings() if they've changed
-                //case "preference_face_detection": // need to update camera controller
-                case "preference_timer":
-                case "preference_burst_mode":
-                case "preference_burst_interval":
-                case "preference_touch_capture":
-                case "preference_pause_preview":
-                case "preference_shutter_sound":
-                case "preference_timer_beep":
-                case "preference_timer_speak":
-                case "preference_volume_keys":
-                    //case "preference_audio_control": // need to update the UI
-                case "preference_audio_noise_control_sensitivity":
-                    //case "preference_enable_remote": // handled below
-                    //case "preference_remote_type":
-                    //case "preference_remote_device_name": // handled below
-                    //case "preference_remote_disconnect_screen_dim":
-                    //case "preference_water_type": // handled below
-                case "preference_lock_orientation":
-                    //case "preference_save_location": // we could probably whitelist this, but accessed it a lot of places...
-                case "preference_using_saf":
-                case "preference_save_photo_prefix":
-                case "preference_save_video_prefix":
-                case "preference_save_zulu_time":
-                case "preference_show_when_locked":
-                case "preference_startup_focus":
-                    //case "preference_preview_size": // need to update preview
-                    //case "preference_ghost_image": // don't whitelist this, as may need to reload ghost image (at fullscreen resolution) if "last" is enabled
-                case "ghost_image_alpha":
-                case "preference_focus_assist":
-                case "preference_show_zoom":
-                case "preference_show_angle":
-                case "preference_show_angle_line":
-                case "preference_show_pitch_lines":
-                case "preference_angle_highlight_color":
-                    //case "preference_show_geo_direction": // don't whitelist these, as if enabled we need to call checkMagneticAccuracy()
-                    //case "preference_show_geo_direction_lines": // as above
-                case "preference_show_battery":
-                case "preference_show_time":
-                case "preference_free_memory":
-                case "preference_show_iso":
-                case "preference_histogram":
-                case "preference_zebra_stripes":
-                case "preference_zebra_stripes_foreground_color":
-                case "preference_zebra_stripes_background_color":
-                case "preference_focus_peaking":
-                case "preference_focus_peaking_color":
-                case "preference_show_video_max_amp":
-                case "preference_grid":
-                case "preference_crop_guide":
-                case "preference_thumbnail_animation":
-                case "preference_take_photo_border":
-                    //case "preference_rotate_preview": // need to update the Preview
-                    //case "preference_ui_placement": // need to update the UI
-                    //case "preference_immersive_mode": // probably could whitelist?
-                    //case "preference_show_face_detection": // need to update the UI
-                    //case "preference_show_cycle_flash": // need to update the UI
-                    //case "preference_show_auto_level": // need to update the UI
-                    //case "preference_show_stamp": // need to update the UI
-                    //case "preference_show_textstamp": // need to update the UI
-                    //case "preference_show_store_location": // need to update the UI
-                    //case "preference_show_cycle_raw": // need to update the UI
-                    //case "preference_show_white_balance_lock": // need to update the UI
-                    //case "preference_show_exposure_lock": // need to update the UI
-                    //case "preference_show_zoom_slider_controls": // need to update the UI
-                    //case "preference_show_take_photo": // need to update the UI
-                case "preference_show_toasts":
-                case "preference_show_whats_new":
-                //case "preference_multi_cam_button": // need to update the UI
-                case "preference_keep_display_on":
-                case "preference_max_brightness":
-                    //case "preference_resolution": // need to set up camera controller and preview
-                    //case "preference_quality": // need to set up camera controller
-                    //case "preference_image_format": // need to set up camera controller (as it can affect the image quality that we set)
-                    //case "preference_raw": // need to update as it affects how we set up camera controller
-                    //case "preference_raw_expo_bracketing": // as above
-                    //case "preference_raw_focus_bracketing": // as above
-                    //case "preference_nr_save": // we could probably whitelist this, but have not done so in case in future we allow RAW to be saved for the base image
-                    //case "preference_hdr_save_expo": // we need to update if this is changed, as it affects whether we request RAW or not in HDR mode when RAW is enabled
-                case "preference_hdr_tonemapping":
-                case "preference_hdr_contrast_enhancement":
-                    //case "preference_expo_bracketing_n_images": // need to set up camera controller
-                    //case "preference_expo_bracketing_stops": // need to set up camera controller
-                case "preference_panorama_crop":
-                    //case "preference_panorama_save": // we could probably whitelist this, but have not done so in case in future we allow RAW to be saved for the base images
-                case "preference_front_camera_mirror":
-                case "preference_exif_artist":
-                case "preference_exif_copyright":
-                case "preference_stamp":
-                case "preference_stamp_dateformat":
-                case "preference_stamp_timeformat":
-                case "preference_stamp_gpsformat":
-                case "preference_stamp_geo_address":
-                case "preference_units_distance":
-                case "preference_textstamp":
-                case "preference_stamp_fontsize":
-                case "preference_stamp_font_color":
-                case "preference_stamp_style":
-                    //case "preference_camera2_fake_flash": // need to update camera controller
-                    //case "preference_camera2_fast_burst": // could probably whitelist?
-                    //case "preference_camera2_photo_video_recording": // need to update camera controller
-                case "preference_background_photo_saving":
-                    //case "preference_video_quality": // need to update camera controller and preview
-                    //case "preference_video_stabilization": // need to update camera controller
-                    //case "preference_video_output_format": // could probably whitelist, but safest to restart camera
-                    //case "preference_video_log": // need to update camera controller
-                    //case "preference_video_profile_gamma": // as above
-                    //case "preference_video_max_duration": // could probably whitelist, but safest to restart camera
-                    //case "preference_video_restart": // could probably whitelist, but safest to restart camera
-                    //case "preference_video_max_filesize": // could probably whitelist, but safest to restart camera
-                    //case "preference_video_restart_max_filesize": // could probably whitelist, but safest to restart camera
-                case "preference_record_audio":
-                case "preference_record_audio_src":
-                case "preference_record_audio_channels":
-                case "preference_lock_video":
-                case "preference_video_subtitle":
-                    //case "preference_video_bitrate": // could probably whitelist, but safest to restart camera
-                    //case "preference_video_fps": // could probably whitelist, but safest to restart camera
-                    //case "preference_force_video_4k": // could probably whitelist, but safest to restart camera
-                case "preference_video_low_power_check":
-                case "preference_video_flash":
-                case PreferenceKeys.RemoteVideoMode:
-                    //case "preference_location": // need to enable/disable gps listeners etc
-                    //case "preference_gps_direction": // need to update listeners
-                case "preference_require_location":
-                    //case "preference_antibanding": // need to set up camera controller
-                    //case "preference_edge_mode": // need to set up camera controller
-                    //case "preference_noise_reduction_mode": // need to set up camera controller
-                    //case "preference_camera_api": // no point whitelisting as we restart anyway
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "this change doesn't require update");
-                    break;
-                case PreferenceKeys.EnableRemote:
-                    bluetoothRemoteControl.startRemoteControl();
-                    break;
-                case PreferenceKeys.RemoteName:
-                    // The remote address changed, restart the service
-                    if (bluetoothRemoteControl.remoteEnabled())
-                        bluetoothRemoteControl.stopRemoteControl();
-                    bluetoothRemoteControl.startRemoteControl();
-                    break;
-                case PreferenceKeys.WaterType:
-                    boolean wt = sharedPreferences.getBoolean(PreferenceKeys.WaterType, true);
-                    mWaterDensity = wt ? WATER_DENSITY_SALTWATER : WATER_DENSITY_FRESHWATER;
-                    break;
-                default:
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "this change does require update");
-                    any_significant_change = true;
-                    break;
-            }
-        }
-
-        boolean anyChange() {
-            return any_change;
-        }
-
-        boolean anySignificantChange() {
-            return any_significant_change;
-        }
-    }
-
-    public void openSettings() {
-        if( MyDebug.LOG )
-            Log.d(TAG, "openSettings");
-        closePopup(); // important to close the popup to avoid confusing with back button callbacks
-        preview.cancelTimer(); // best to cancel any timer, in case we take a photo while settings window is open, or when changing settings
-        preview.cancelRepeat(); // similarly cancel the auto-repeat mode!
-        preview.stopVideo(false); // important to stop video, as we'll be changing camera parameters when the settings window closes
-        applicationInterface.stopPanorama(true); // important to stop panorama recording, as we might end up as we'll be changing camera parameters when the settings window closes
-        stopAudioListeners();
-        // close back handler callbacks (so back button is enabled again when going to settings) - in theory shouldn't be needed as all of these should
-        // be disabled now, but just in case:
-        this.enablePopupOnBackPressedCallback(false);
-        this.enablePausePreviewOnBackPressedCallback(false);
-        this.enableScreenLockOnBackPressedCallback(false);
-
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("edge_to_edge_mode", edge_to_edge_mode);
-        bundle.putInt("cameraId", this.preview.getCameraId());
-        bundle.putString("cameraIdSPhysical", this.applicationInterface.getCameraIdSPhysicalPref());
-        bundle.putInt("nCameras", preview.getCameraControllerManager().getNumberOfCameras());
-        bundle.putBoolean("camera_open", this.preview.getCameraController() != null);
-        bundle.putString("camera_api", this.preview.getCameraAPI());
-        bundle.putBoolean("using_android_l", this.preview.usingCamera2API());
-        if( this.preview.getCameraController() != null ) {
-            bundle.putInt("camera_orientation", this.preview.getCameraController().getCameraOrientation());
-        }
-        bundle.putString("photo_mode_string", getPhotoModeString(applicationInterface.getPhotoMode(), true));
-        bundle.putBoolean("supports_auto_stabilise", this.supports_auto_stabilise);
-        bundle.putBoolean("supports_flash", this.preview.supportsFlash());
-        bundle.putBoolean("supports_force_video_4k", this.supports_force_video_4k);
-        bundle.putBoolean("supports_camera2", this.supports_camera2);
-        bundle.putBoolean("supports_face_detection", this.preview.supportsFaceDetection());
-        bundle.putBoolean("supports_jpeg_r", this.preview.supportsJpegR());
-        bundle.putBoolean("supports_raw", this.preview.supportsRaw());
-        bundle.putBoolean("supports_burst_raw", this.supportsBurstRaw());
-        bundle.putBoolean("supports_optimise_focus_latency", this.supportsOptimiseFocusLatency());
-        bundle.putBoolean("supports_preshots", this.supportsPreShots());
-        bundle.putBoolean("supports_hdr", this.supportsHDR());
-        bundle.putBoolean("supports_nr", this.supportsNoiseReduction());
-        bundle.putBoolean("supports_panorama", this.supportsPanorama());
-        bundle.putBoolean("has_gyro_sensors", applicationInterface.getGyroSensor().hasSensors());
-        bundle.putBoolean("supports_expo_bracketing", this.supportsExpoBracketing());
-        bundle.putBoolean("supports_preview_bitmaps", this.supportsPreviewBitmaps());
-        bundle.putInt("max_expo_bracketing_n_images", this.maxExpoBracketingNImages());
-        bundle.putBoolean("supports_exposure_compensation", this.preview.supportsExposures());
-        bundle.putInt("exposure_compensation_min", this.preview.getMinimumExposure());
-        bundle.putInt("exposure_compensation_max", this.preview.getMaximumExposure());
-        bundle.putBoolean("supports_iso_range", this.preview.supportsISORange());
-        bundle.putInt("iso_range_min", this.preview.getMinimumISO());
-        bundle.putInt("iso_range_max", this.preview.getMaximumISO());
-        bundle.putBoolean("supports_exposure_time", this.preview.supportsExposureTime());
-        bundle.putBoolean("supports_exposure_lock", this.preview.supportsExposureLock());
-        bundle.putBoolean("supports_white_balance_lock", this.preview.supportsWhiteBalanceLock());
-        bundle.putLong("exposure_time_min", this.preview.getMinimumExposureTime());
-        bundle.putLong("exposure_time_max", this.preview.getMaximumExposureTime());
-        bundle.putBoolean("supports_white_balance_temperature", this.preview.supportsWhiteBalanceTemperature());
-        bundle.putInt("white_balance_temperature_min", this.preview.getMinimumWhiteBalanceTemperature());
-        bundle.putInt("white_balance_temperature_max", this.preview.getMaximumWhiteBalanceTemperature());
-        bundle.putBoolean("is_multi_cam", this.multiCamHandler.isMultiCam());
-        bundle.putBoolean("has_physical_cameras", this.preview.hasPhysicalCameras());
-        bundle.putBoolean("supports_optical_stabilization", this.preview.supportsOpticalStabilization());
-        bundle.putBoolean("optical_stabilization_enabled", this.preview.getOpticalStabilization());
-        bundle.putBoolean("supports_video_stabilization", this.preview.supportsVideoStabilization());
-        bundle.putBoolean("video_stabilization_enabled", this.preview.getVideoStabilization());
-        bundle.putBoolean("can_disable_shutter_sound", this.preview.canDisableShutterSound());
-        bundle.putInt("tonemap_max_curve_points", this.preview.getTonemapMaxCurvePoints());
-        bundle.putBoolean("supports_tonemap_curve", this.preview.supportsTonemapCurve());
-        bundle.putBoolean("supports_photo_video_recording", this.preview.supportsPhotoVideoRecording());
-        bundle.putFloat("camera_view_angle_x", preview.getViewAngleX(false));
-        bundle.putFloat("camera_view_angle_y", preview.getViewAngleY(false));
-        bundle.putFloat("min_zoom_factor", preview.getMinZoomRatio());
-        bundle.putFloat("max_zoom_factor", preview.getMaxZoomRatio());
-
-        putBundleExtra(bundle, "color_effects", this.preview.getSupportedColorEffects());
-        putBundleExtra(bundle, "scene_modes", this.preview.getSupportedSceneModes());
-        putBundleExtra(bundle, "white_balances", this.preview.getSupportedWhiteBalances());
-        putBundleExtra(bundle, "isos", this.preview.getSupportedISOs());
-        bundle.putInt("magnetic_accuracy", magneticSensor.getMagneticAccuracy());
-        bundle.putString("iso_key", this.preview.getISOKey());
-        if( this.preview.getCameraController() != null ) {
-            bundle.putString("parameters_string", preview.getCameraController().getParametersString());
-        }
-        List<String> antibanding = this.preview.getSupportedAntiBanding();
-        putBundleExtra(bundle, "antibanding", antibanding);
-        if( antibanding != null ) {
-            String [] entries_arr = new String[antibanding.size()];
-            int i=0;
-            for(String value: antibanding) {
-                entries_arr[i] = getMainUI().getEntryForAntiBanding(value);
-                i++;
-            }
-            bundle.putStringArray("antibanding_entries", entries_arr);
-        }
-        List<String> edge_modes = this.preview.getSupportedEdgeModes();
-        putBundleExtra(bundle, "edge_modes", edge_modes);
-        if( edge_modes != null ) {
-            String [] entries_arr = new String[edge_modes.size()];
-            int i=0;
-            for(String value: edge_modes) {
-                entries_arr[i] = getMainUI().getEntryForNoiseReductionMode(value);
-                i++;
-            }
-            bundle.putStringArray("edge_modes_entries", entries_arr);
-        }
-        List<String> noise_reduction_modes = this.preview.getSupportedNoiseReductionModes();
-        putBundleExtra(bundle, "noise_reduction_modes", noise_reduction_modes);
-        if( noise_reduction_modes != null ) {
-            String [] entries_arr = new String[noise_reduction_modes.size()];
-            int i=0;
-            for(String value: noise_reduction_modes) {
-                entries_arr[i] = getMainUI().getEntryForNoiseReductionMode(value);
-                i++;
-            }
-            bundle.putStringArray("noise_reduction_modes_entries", entries_arr);
-        }
-
-        List<CameraController.Size> preview_sizes = this.preview.getSupportedPreviewSizes();
-        if( preview_sizes != null ) {
-            int [] widths = new int[preview_sizes.size()];
-            int [] heights = new int[preview_sizes.size()];
-            int i=0;
-            for(CameraController.Size size: preview_sizes) {
-                widths[i] = size.width;
-                heights[i] = size.height;
-                i++;
-            }
-            bundle.putIntArray("preview_widths", widths);
-            bundle.putIntArray("preview_heights", heights);
-        }
-        bundle.putInt("preview_width", preview.getCurrentPreviewSize().width);
-        bundle.putInt("preview_height", preview.getCurrentPreviewSize().height);
-
-        // Note that we set check_burst to false, as the Settings always displays all supported resolutions (along with the "saved"
-        // resolution preference, even if that doesn't support burst and we're in a burst mode).
-        // This is to be consistent with other preferences, e.g., we still show RAW settings even though that might not be supported
-        // for the current photo mode.
-        List<CameraController.Size> sizes = this.preview.getSupportedPictureSizes(false);
-        if( sizes != null ) {
-            int [] widths = new int[sizes.size()];
-            int [] heights = new int[sizes.size()];
-            boolean [] supports_burst = new boolean[sizes.size()];
-            int i=0;
-            for(CameraController.Size size: sizes) {
-                widths[i] = size.width;
-                heights[i] = size.height;
-                supports_burst[i] = size.supports_burst;
-                i++;
-            }
-            bundle.putIntArray("resolution_widths", widths);
-            bundle.putIntArray("resolution_heights", heights);
-            bundle.putBooleanArray("resolution_supports_burst", supports_burst);
-        }
-        if( preview.getCurrentPictureSize() != null ) {
-            bundle.putInt("resolution_width", preview.getCurrentPictureSize().width);
-            bundle.putInt("resolution_height", preview.getCurrentPictureSize().height);
-        }
-
-        //List<String> video_quality = this.preview.getVideoQualityHander().getSupportedVideoQuality();
-        String fps_value = applicationInterface.getVideoFPSPref(); // n.b., this takes into account slow motion mode putting us into a high frame rate
-        if( MyDebug.LOG )
-            Log.d(TAG, "fps_value: " + fps_value);
-        List<String> video_quality = this.preview.getSupportedVideoQuality(fps_value);
-        if( video_quality == null || video_quality.isEmpty() ) {
-            Log.e(TAG, "can't find any supported video sizes for current fps!");
-            // fall back to unfiltered list
-            video_quality = this.preview.getVideoQualityHander().getSupportedVideoQuality();
-        }
-        if( video_quality != null && this.preview.getCameraController() != null ) {
-            String [] video_quality_arr = new String[video_quality.size()];
-            String [] video_quality_string_arr = new String[video_quality.size()];
-            int i=0;
-            for(String value: video_quality) {
-                video_quality_arr[i] = value;
-                video_quality_string_arr[i] = this.preview.getCamcorderProfileDescription(value);
-                i++;
-            }
-            bundle.putStringArray("video_quality", video_quality_arr);
-            bundle.putStringArray("video_quality_string", video_quality_string_arr);
-
-            boolean is_high_speed = this.preview.fpsIsHighSpeed(fps_value);
-            bundle.putBoolean("video_is_high_speed", is_high_speed);
-            String video_quality_preference_key = PreferenceKeys.getVideoQualityPreferenceKey(this.preview.getCameraId(), applicationInterface.getCameraIdSPhysicalPref(), is_high_speed);
-            if( MyDebug.LOG )
-                Log.d(TAG, "video_quality_preference_key: " + video_quality_preference_key);
-            bundle.putString("video_quality_preference_key", video_quality_preference_key);
-        }
-
-        if( preview.getVideoQualityHander().getCurrentVideoQuality() != null ) {
-            bundle.putString("current_video_quality", preview.getVideoQualityHander().getCurrentVideoQuality());
-        }
-        VideoProfile camcorder_profile = preview.getVideoProfile();
-        bundle.putInt("video_frame_width", camcorder_profile.videoFrameWidth);
-        bundle.putInt("video_frame_height", camcorder_profile.videoFrameHeight);
-        bundle.putInt("video_bit_rate", camcorder_profile.videoBitRate);
-        bundle.putInt("video_frame_rate", camcorder_profile.videoFrameRate);
-        bundle.putDouble("video_capture_rate", camcorder_profile.videoCaptureRate);
-        bundle.putBoolean("video_high_speed", preview.isVideoHighSpeed());
-        bundle.putFloat("video_capture_rate_factor", applicationInterface.getVideoCaptureRateFactor());
-
-        List<CameraController.Size> video_sizes = this.preview.getVideoQualityHander().getSupportedVideoSizes();
-        if( video_sizes != null ) {
-            int [] widths = new int[video_sizes.size()];
-            int [] heights = new int[video_sizes.size()];
-            int i=0;
-            for(CameraController.Size size: video_sizes) {
-                widths[i] = size.width;
-                heights[i] = size.height;
-                i++;
-            }
-            bundle.putIntArray("video_widths", widths);
-            bundle.putIntArray("video_heights", heights);
-        }
-
-        // set up supported fps values
-        if( preview.usingCamera2API() ) {
-            // with Camera2, we know what frame rates are supported
-            int [] candidate_fps = {15, 24, 25, 30, 60, 96, 100, 120, 240};
-            List<Integer> video_fps = new ArrayList<>();
-            List<Boolean> video_fps_high_speed = new ArrayList<>();
-            for(int fps : candidate_fps) {
-                if( preview.fpsIsHighSpeed(String.valueOf(fps)) ) {
-                    video_fps.add(fps);
-                    video_fps_high_speed.add(true);
-                }
-                else if( this.preview.getVideoQualityHander().videoSupportsFrameRate(fps) ) {
-                    video_fps.add(fps);
-                    video_fps_high_speed.add(false);
-                }
-            }
-            int [] video_fps_array = new int[video_fps.size()];
-            for(int i=0;i<video_fps.size();i++) {
-                video_fps_array[i] = video_fps.get(i);
-            }
-            bundle.putIntArray("video_fps", video_fps_array);
-            boolean [] video_fps_high_speed_array = new boolean[video_fps_high_speed.size()];
-            for(int i=0;i<video_fps_high_speed.size();i++) {
-                video_fps_high_speed_array[i] = video_fps_high_speed.get(i);
-            }
-            bundle.putBooleanArray("video_fps_high_speed", video_fps_high_speed_array);
-        }
-        else {
-            // with old API, we don't know what frame rates are supported, so we make it up and let the user try
-            // probably shouldn't allow 120fps, but we did in the past, and there may be some devices where this did work?
-            int [] video_fps = {15, 24, 25, 30, 60, 96, 100, 120};
-            bundle.putIntArray("video_fps", video_fps);
-            boolean [] video_fps_high_speed_array = new boolean[video_fps.length];
-            for(int i=0;i<video_fps.length;i++) {
-                video_fps_high_speed_array[i] = false; // no concept of high speed frame rates in old API
-            }
-            bundle.putBooleanArray("video_fps_high_speed", video_fps_high_speed_array);
-        }
-
-        putBundleExtra(bundle, "flash_values", this.preview.getSupportedFlashValues());
-        putBundleExtra(bundle, "focus_values", this.preview.getSupportedFocusValues());
-
-        preferencesListener.startListening();
-
-        showPreview(false);
-        setWindowFlagsForSettings(); // important to do after passing camera info into bundle, since this will close the camera
-        MyPreferenceFragment fragment = new MyPreferenceFragment();
-        fragment.setArguments(bundle);
-        // use commitAllowingStateLoss() instead of commit(), does to "java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState" crash seen on Google Play
-        // see http://stackoverflow.com/questions/7575921/illegalstateexception-can-not-perform-this-action-after-onsaveinstancestate-wit
-        getFragmentManager().beginTransaction().add(android.R.id.content, fragment, "PREFERENCE_FRAGMENT").addToBackStack(null).commitAllowingStateLoss();
-    }
-
-    @Override
-    public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
-        if( MyDebug.LOG ) {
-            Log.d(TAG, "onPreferenceStartFragment");
-            Log.d(TAG, "pref: " + pref.getFragment());
-        }
-
-        // instantiate the new fragment
-        //final Bundle args = pref.getExtras();
-        // we want to pass the caller preference fragment's bundle to the new sub-screen (this will be a
-        // copy of the bundle originally created in openSettings()
-        final Bundle args = new Bundle(caller.getArguments());
-
-        final Fragment fragment = Fragment.instantiate(this, pref.getFragment(), args);
-        fragment.setTargetFragment(caller, 0);
-        if( MyDebug.LOG )
-            Log.d(TAG, "replace fragment");
-        /*getFragmentManager().beginTransaction()
-                .replace(R.id.content, fragment)
-                .addToBackStack(null)
-                .commit();*/
-        getFragmentManager().beginTransaction().add(android.R.id.content, fragment, "PREFERENCE_FRAGMENT_"+pref.getFragment()).addToBackStack(null).commitAllowingStateLoss();
-
-        /*
-        // AndroidX version:
-        final Fragment fragment = getSupportFragmentManager().getFragmentFactory().instantiate(
-                getClassLoader(),
-                pref.getFragment());
-        fragment.setArguments(args);
-        fragment.setTargetFragment(caller, 0);
-        // replace the existing fragment with the new fragment:
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content, fragment)
-                .addToBackStack(null)
-                .commit();
-         */
-        return true;
     }
 
     public void updateForSettings(boolean update_camera) {
@@ -3157,56 +2605,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         preview.reopenCamera();
     }
 
-    public MyPreferenceFragment getPreferenceFragment() {
-        return (MyPreferenceFragment)getFragmentManager().findFragmentByTag("PREFERENCE_FRAGMENT");
-    }
-
-    private boolean settingsIsOpen() {
-        return getPreferenceFragment() != null;
-    }
-
-    /** Call when the settings is going to be closed.
-     */
-    void settingsClosing() {
-        if( MyDebug.LOG )
-            Log.d(TAG, "close settings");
-        setWindowFlagsForCamera();
-        showPreview(true);
-
-        preferencesListener.stopListening();
-
-        // Update the cached settings in DrawPreview
-        // Note that some GUI related settings won't trigger preferencesListener.anyChange(), so
-        // we always call this. Perhaps we could add more classifications to PreferencesListener
-        // to mark settings that need us to update DrawPreview but not call updateForSettings().
-        // However, DrawPreview.updateSettings() should be a quick function (the main point is
-        // to avoid reading the preferences in every single frame).
-        applicationInterface.getDrawPreview().updateSettings();
-
-        // Set the flag to cover the preview until the camera is open and receiving frames again
-        // (for Camera2 API) - avoids showing a flash of the preview from before the user went to
-        // the settings.
-        applicationInterface.getDrawPreview().setCoverPreview(true);
-
-        if( preferencesListener.anyChange() ) {
-            mainUI.getOnScreenIcons().updateOnScreenIcons();
-        }
-
-        if( preferencesListener.anySignificantChange() ) {
-            // don't need to update camera, as we now pause/resume camera when going to settings
-            updateForSettings(false);
-        }
-        else {
-            if( MyDebug.LOG )
-                Log.d(TAG, "no need to call updateForSettings() for changes made to preferences");
-            if( preferencesListener.anyChange() ) {
-                // however we should still destroy cached popup, in case UI settings need to be kept in
-                // sync (e.g., changing the Repeat Mode)
-                mainUI.destroyPopup();
-            }
-        }
-    }
-
     private PopupOnBackPressedCallback popupOnBackPressedCallback;
 
     private class PopupOnBackPressedCallback extends OnBackPressedCallback {
@@ -3316,10 +2714,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
             return;
         }
 
-        if( settingsIsOpen() ) {
-            settingsClosing();
-        }
-        else if( preview != null && preview.isPreviewPaused() ) {
+        if( preview != null && preview.isPreviewPaused() ) {
             if( MyDebug.LOG )
                 Log.d(TAG, "preview was paused, so unpause it");
             preview.startCameraPreview();
@@ -4431,59 +3826,15 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
     }
 
     /** Opens the Storage Access Framework dialog to select a folder for save location.
-     * @param from_preferences Whether called from the Preferences
      */
-    void openFolderChooserDialogSAF(boolean from_preferences) {
+    void openFolderChooserDialogSAF() {
         if( MyDebug.LOG )
-            Log.d(TAG, "openFolderChooserDialogSAF: " + from_preferences);
-        this.saf_dialog_from_preferences = from_preferences;
+            Log.d(TAG, "openFolderChooserDialogSAF");
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         //intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
         startActivityForResult(intent, CHOOSE_SAVE_FOLDER_SAF_CODE);
-    }
-
-    /** Opens the Storage Access Framework dialog to select a file for ghost image.
-     * @param from_preferences Whether called from the Preferences
-     */
-    void openGhostImageChooserDialogSAF(boolean from_preferences) {
-        if( MyDebug.LOG )
-            Log.d(TAG, "openGhostImageChooserDialogSAF: " + from_preferences);
-        this.saf_dialog_from_preferences = from_preferences;
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/*");
-        intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
-        try {
-            startActivityForResult(intent, CHOOSE_GHOST_IMAGE_SAF_CODE);
-        }
-        catch(ActivityNotFoundException e) {
-            // see https://stackoverflow.com/questions/34021039/action-open-document-not-working-on-miui/34045627
-            preview.showToast(null, R.string.open_files_saf_exception_ghost);
-            MyDebug.logStackTrace(TAG, "ActivityNotFoundException from startActivityForResult", e);
-        }
-    }
-
-    /** Opens the Storage Access Framework dialog to select a file for loading settings.
-     * @param from_preferences Whether called from the Preferences
-     */
-    void openLoadSettingsChooserDialogSAF(boolean from_preferences) {
-        if( MyDebug.LOG )
-            Log.d(TAG, "openLoadSettingsChooserDialogSAF: " + from_preferences);
-        this.saf_dialog_from_preferences = from_preferences;
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/xml"); // note that application/xml doesn't work (can't select the xml files)!
-        intent = com.wanderwildwood.shashinki.ui.FilesPicker.INSTANCE.aim(this, intent, true); // shashinki: Files (tana) answers it on e-ink when installed
-        try {
-            startActivityForResult(intent, CHOOSE_LOAD_SETTINGS_SAF_CODE);
-        }
-        catch(ActivityNotFoundException e) {
-            // see https://stackoverflow.com/questions/34021039/action-open-document-not-working-on-miui/34045627
-            preview.showToast(null, R.string.open_files_saf_exception_generic);
-            MyDebug.logStackTrace(TAG, "ActivityNotFoundException from startActivityForResult", e);
-        }
     }
 
     /** Listens for the response from the Storage Access Framework dialog to select a folder
@@ -4560,101 +3911,8 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                     preview.showToast(null, R.string.saf_cancelled);
                 }
 
-                if( !saf_dialog_from_preferences ) {
-                    setWindowFlagsForCamera();
-                    showPreview(true);
-                }
-                break;
-            case CHOOSE_GHOST_IMAGE_SAF_CODE:
-                if( resultCode == RESULT_OK && resultData != null ) {
-                    Uri fileUri = resultData.getData();
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "returned single fileUri: " + fileUri);
-                    // persist permission just in case?
-                    final int takeFlags = resultData.getFlags()
-                            & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    try {
-					/*if( true )
-						throw new SecurityException(); // test*/
-                        // Check for the freshest data.
-                        // WrongConstant seems to be spurious, possibly due to not knowing what resultData.getFlags() might contain -
-                        // this code matches Google's documentation!
-                        //noinspection WrongConstant
-                        getContentResolver().takePersistableUriPermission(fileUri, takeFlags);
-
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(PreferenceKeys.GhostSelectedImageSAFPreferenceKey, fileUri.toString());
-                        editor.apply();
-                    }
-                    catch(SecurityException e) {
-                        MyDebug.logStackTrace(TAG, "SecurityException failed to take permission", e);
-                        preview.showToast(null, R.string.saf_permission_failed_open_image);
-                        // failed - if the user had yet to set a ghost image
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                        String uri = sharedPreferences.getString(PreferenceKeys.GhostSelectedImageSAFPreferenceKey, "");
-                        if( uri.isEmpty() ) {
-                            if( MyDebug.LOG )
-                                Log.d(TAG, "no SAF ghost image was set");
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString(PreferenceKeys.GhostImagePreferenceKey, "preference_ghost_image_off");
-                            editor.apply();
-                        }
-                    }
-                }
-                else {
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "SAF dialog cancelled");
-                    // cancelled - if the user had yet to set a ghost image, make sure we switch the option back off
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                    String uri = sharedPreferences.getString(PreferenceKeys.GhostSelectedImageSAFPreferenceKey, "");
-                    if( uri.isEmpty() ) {
-                        if( MyDebug.LOG )
-                            Log.d(TAG, "no SAF ghost image was set");
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(PreferenceKeys.GhostImagePreferenceKey, "preference_ghost_image_off");
-                        editor.apply();
-                    }
-                }
-
-                if( !saf_dialog_from_preferences ) {
-                    setWindowFlagsForCamera();
-                    showPreview(true);
-                }
-                break;
-            case CHOOSE_LOAD_SETTINGS_SAF_CODE:
-                if( resultCode == RESULT_OK && resultData != null ) {
-                    Uri fileUri = resultData.getData();
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "returned single fileUri: " + fileUri);
-                    // persist permission just in case?
-                    final int takeFlags = resultData.getFlags()
-                            & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    try {
-					/*if( true )
-						throw new SecurityException(); // test*/
-                        // Check for the freshest data.
-                        // WrongConstant seems to be spurious, possibly due to not knowing what resultData.getFlags() might contain -
-                        // this code matches Google's documentation!
-                        //noinspection WrongConstant
-                        getContentResolver().takePersistableUriPermission(fileUri, takeFlags);
-
-                        settingsManager.loadSettings(fileUri);
-                    }
-                    catch(SecurityException e) {
-                        MyDebug.logStackTrace(TAG, "SecurityException failed to take permission", e);
-                        preview.showToast(null, R.string.restore_settings_failed);
-                    }
-                }
-                else {
-                    if( MyDebug.LOG )
-                        Log.d(TAG, "SAF dialog cancelled");
-                }
-
-                if( !saf_dialog_from_preferences ) {
-                    setWindowFlagsForCamera();
-                    showPreview(true);
-                }
+                setWindowFlagsForCamera();
+                showPreview(true);
                 break;
         }
     }
@@ -4731,7 +3989,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
             if( history == null || history.size() <= 1 ) {
                 if( MyDebug.LOG )
                     Log.d(TAG, "go straight to choose folder dialog for SAF");
-                openFolderChooserDialogSAF(false);
+                openFolderChooserDialogSAF();
                 return;
             }
         }
@@ -4808,7 +4066,7 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
                     if( MyDebug.LOG )
                         Log.d(TAG, "selected choose new folder");
                     if( applicationInterface.getStorageUtils().isUsingSAF() ) {
-                        openFolderChooserDialogSAF(false);
+                        openFolderChooserDialogSAF();
                     }
                     else {
                         openFolderChooserDialog();
@@ -4849,18 +4107,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         //getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
         setWindowFlagsForSettings();
         showAlert(alertDialog.create());
-    }
-
-    static private void putBundleExtra(Bundle bundle, String key, List<String> values) {
-        if( values != null ) {
-            String [] values_arr = new String[values.size()];
-            int i=0;
-            for(String value: values) {
-                values_arr[i] = value;
-                i++;
-            }
-            bundle.putStringArray(key, values_arr);
-        }
     }
 
     public void clickedShare(View view) {
@@ -5670,10 +4916,6 @@ public class MainActivity extends AppCompatActivity implements PreferenceFragmen
         // Need at least Android 5+ for TextureView
         // Need at least Android 8+ for video encoding classes
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && preview.getView() instanceof TextureView && large_heap_memory >= 512;
-    }
-
-    private int maxExpoBracketingNImages() {
-        return preview.maxExpoBracketingNImages();
     }
 
     public boolean supportsForceVideo4K() {

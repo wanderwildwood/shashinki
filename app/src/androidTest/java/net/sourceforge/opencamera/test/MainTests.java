@@ -74,14 +74,12 @@ public class MainTests {
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testTouchFocusQuick"));
         if( !TestUtils.test_camera2 ) {
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testGallery"));
-            suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettings"));
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettingsSaveLoad"));
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testFolderChooserNew"));
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testFolderChooserInvalid"));
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSaveFolderHistory"));
             suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSaveFolderHistorySAF"));
         }
-        suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettingsPrivacyPolicy"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testPreviewRotation"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testLayoutNoLimits"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testLayoutNoLimitsStartup"));

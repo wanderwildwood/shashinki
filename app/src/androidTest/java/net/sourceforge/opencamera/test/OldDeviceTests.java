@@ -19,12 +19,10 @@ public class OldDeviceTests {
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSaveModes"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testFocusFlashAvailability"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testGallery"));
-        suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettings"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettingsSaveLoad"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testFolderChooserNew"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testFolderChooserInvalid"));
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSaveFolderHistory"));
-        suite.addTest(TestSuite.createTest(MainActivityTest.class, "testSettingsPrivacyPolicy"));
 
         suite.addTest(TestSuite.createTest(MainActivityTest.class, "testLocationOn"));
         //suite.addTest(TestSuite.createTest(MainActivityTest.class, "testTakePhoto"));
