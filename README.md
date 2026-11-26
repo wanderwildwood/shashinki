@@ -11,7 +11,7 @@ sixteen grays, a slow redraw, and is read outdoors as often as indoors. It is
 
 | | | | |
 |---|---|---|---|
-| ![Taking a photo](screenshots/01-photo.png) | ![Settings](screenshots/02-settings.png) | ![Code reading, location and the folder](screenshots/03-codes.png) | ![About, with the privacy page](screenshots/04-about.png) |
+| ![Taking a photo](screenshots/1-photo.png) | ![Video](screenshots/2-video.png) | ![Settings: location, code reading, grid](screenshots/3-settings.png) | ![More settings: sizes, steady video, quality](screenshots/4-more-settings.png) |
 
 ## What it does
 
